@@ -7,15 +7,18 @@ class EmitTest1 implements  EmitInterface <TestObject1> {
   int instances, currentValue
 
   EmitTest1 (List params){
-    currentValue = 0
+    currentValue = params[1] as int
     instances = params[0] as int
+    println "Emitting from $currentValue for $instances instances"
   }
 
   @Override
   EmittedObject <TestObject1> create() {
     def eo = new EmittedObject()
     if (currentValue < instances){
-      eo.emittedObject = new TestObject1(currentValue)
+      TestObject1 tObj = new TestObject1(currentValue)
+      println "$tObj"
+      eo.emittedObject = tObj
       currentValue++
       eo.valid = true
     }
