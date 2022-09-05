@@ -5,11 +5,11 @@ import org.junit.Test
 
 import static org.junit.Assert.assertTrue
 
-class Test1 {
+class Test2 {
   @Test
   public void test(){
 
-    String fileToBuild = "D:\\IJGradle\\DSL4CC\\src\\test\\groovy\\ParserTestFiles\\test1.dsl4ccstruct"
+    String fileToBuild = "D:\\IJGradle\\DSL4CC\\src\\test\\groovy\\ParserTestFiles\\test2.dsl4ccstruct"
 
     def creator = new DSLBuild(structureFile: fileToBuild)
 

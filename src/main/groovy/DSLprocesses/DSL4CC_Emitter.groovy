@@ -25,7 +25,7 @@ class DSL4CC_Emitter implements CSProcess{
   ChannelOutput workerToNode
   int workerID    // relative to the cluster
   String className
-  List <String> parameters
+  List <String> parameters // specific to an emitter if there is more than 1
 
   @Override
   void run() {
@@ -81,9 +81,9 @@ class DSL4CC_Emitter implements CSProcess{
 
     Class EmitClass = Class.forName(className)
     List parameterValues = extractParams(parameters)
-//    println "Emit params = $parameterValues"
+    println "Emit $workerID has params = $parameterValues"
     Object emitClass = EmitClass.newInstance(parameterValues)
-//    println "emit class created"
+    println "Emit $workerID class created"
 
     def ec = emitClass.create() as EmittedObject
     RequestSend rsIndex = new RequestSend(workerID)

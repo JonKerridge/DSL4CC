@@ -21,8 +21,11 @@ class DSL4CC_Collecter implements CSProcess{
   // internal channels to Node
   ChannelOutput workerToNode
   int workerID    // relative to the cluster
+  //TODO collect now has collect and finalise methods both with their own parameter strings
   String methodName
   List <String> parameters
+  String finaliseMethodName
+  List <String> finaliseParameters
 
   @Override
   void run() {
@@ -70,9 +73,10 @@ class DSL4CC_Collecter implements CSProcess{
 //        "\niw = ${inputWork.getLocation()}"
 
         List parameterValues = extractParams(parameters)
+    List finaliseParameterValues = extractParams(finaliseParameters)
 //    println "Collect params = $parameterValues"
 
-    def inData
+    def inData, previousData
     RequestSend workRequest
     workRequest = new RequestSend(workerID)
 //    println "Collect $workerID has created request $workRequest"
@@ -82,10 +86,12 @@ class DSL4CC_Collecter implements CSProcess{
 //    println "Collect $workerID has read $inData"
     while (!(inData instanceof TerminalIndex)) {
       inData.&"$methodName"(parameterValues)
+      previousData = inData
       requestWork.write(new RequestSend(workerID))
       inData = inputWork.read()
     }
-    //TODO add a finalise method to tidy everything up and check results consistency
+    //call the finalise method if it exists
+    if (finaliseMethodName != null) previousData.&"$finaliseMethodName"(finaliseParameterValues)
 
     // a termination has been read, tell the node
 //    println "Collect $workerID has read termination"

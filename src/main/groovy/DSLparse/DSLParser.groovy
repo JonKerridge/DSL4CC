@@ -1,165 +1,184 @@
 package DSLparse
 
 import DSLrecords.ParseRecord
+import groovyjarjarpicocli.CommandLine
 
 class DSLParser {
 
-  String inputFileName, outputTextFile, outObjectFile
+    String inputFileName, outputTextFile, outObjectFile
 
-  DSLParser(String inFileName) {
-    this.inputFileName = inFileName
-    outputTextFile = inputFileName + "txt"
-    outObjectFile = inputFileName + "struct"
-  }
+    DSLParser(String inFileName) {
+        this.inputFileName = inFileName
+        outputTextFile = inputFileName + "txt"
+        outObjectFile = inputFileName + "struct"
+    }
 
-  String hostAddress
+    String hostIPAddress
 
-   Integer findOption(List tokens, int tokenSize, String testFor) {
-    Integer t
-    t = 0
-    while ((t < tokenSize && (!(tokens[t] =~ testFor)))) t++
-    // need to ensure that at least one token follows the option specification
-    if ((t+1) < tokenSize) return t else return null
-  }
+    class HostSpecification {
+        @CommandLine.Option( names = "-ip", description = "the IP address of the host")
+        String hostIP
+    } // HostSpecification
 
-  boolean parse() {
-    List<ParseRecord> buildData
-    buildData = []
-    boolean ok = true
-    int line = 0
-    boolean collectProcessed = false
-    new File(inputFileName).eachLine { String inLine ->
-      List<String> tokens = inLine.tokenize()
-      switch (tokens[0]){
-        case 'host':
-          if (line == 0) ok = parseHost(tokens, buildData) else {
-            println " Host specification not first line in $inputFileName"
-            ok = false
-          }
-          break
-        case 'emit':
-          if (line == 1) ok = parseEmit(tokens, buildData) else {
-            println " Emit specification not second line in $inputFileName"
-            ok = false
-          }
-          break
-        case 'work':
-          if (!collectProcessed) ok = parseWork(tokens, buildData) else {
-            println "Collect not the last line in $inputFileName"
-            ok = false
-          }
-          break
-        case 'collect':
-          ok = parseCollect(tokens, buildData)
-          collectProcessed = true
-          break
-        default:
-          println "Unrecognised specification in $inputFileName for ${tokens[0]}"
-          break
-      } // switch
-      line = line + 1
-    }
-    // check all specified IP addresses for nodes are unique
-    ok = checkIPUniqueness(buildData)
-    if (ok) {
-      File outFile = new File(outputTextFile)
-      PrintWriter printWriter = outFile.newPrintWriter()
-      buildData.each { printWriter.println "$it" }
-      printWriter.flush()
-      printWriter.close()
-      File outObjFile = new File(outObjectFile)
-      ObjectOutputStream outStream = outObjFile.newObjectOutputStream()
-      buildData.each { outStream << it }
-      outStream.flush()
-      outStream.close()
-      println "Parsing completed - no errors in $inputFileName"
-    } else println "Parsing failed, see errors highlighted above in $inputFileName"
-    return ok
-  } // parse()
+    class EmitSpecification {
+        @CommandLine.Option(names = ["-n", "-nodes"], description = "number of nodes") int nodes
+        @CommandLine.Option(names = ["-w", "-workers"], description = "number of workers per node") int workers
+        @CommandLine.Option(names = ["-c", "-class"], description = "name of class implementing the EmitInterface")
+        String className
+        @CommandLine.Parameters ( description =" IP address for each node") List <String> nodeIPs
+        // can be placed anywhere in specification but the number of specified IPs must match the number of nodes
+        @CommandLine.Option( names = "-p", split = "!") List paramStrings
+        // comma separated type, value pairs with no spaces, each string separated by ! with no spaces
+    } // EmitSpecification
 
-  boolean checkIPUniqueness (List<ParseRecord> buildData){
-    List <String> usedIPs = []
-    buildData.each {record ->
-      if ( record.fixedIPAddresses != null)
-        usedIPs = usedIPs + record.fixedIPAddresses
-    }
-    int totalSize = usedIPs.size()
-    if (totalSize != usedIPs.toUnique().size()){
-      println "The specified IPs are not unique $usedIPs"
-      return false
-    }
-    else
-      return true
-  } // checkIPUniqueness
-  boolean parseHost(List tokens, List<ParseRecord> buildData) {
-    Integer tokenIndex
-    int tokenSize
-    tokenSize = tokens.size()
-    if ( (tokenIndex = findOption(tokens, tokenSize, "-ip")) == null){
-      println "Host -ip option missing from $tokens"
-      return false
-    }
-    else{
-      ParseRecord pr = new ParseRecord()
-      pr.typeName = tokens[0]
-        hostAddress = tokens[tokenIndex + 1]
-        pr.hostAddress = hostAddress
-        buildData << pr
-        return true
-    }
-  } // parseHost
+    class WorkSpecification {
+        @CommandLine.Option(names = ["-n", "-nodes"], description = "number of nodes")
+        int nodes
+        @CommandLine.Option(names = ["-w", "-workers"], description = "number of workers per node")
+        int workers
+        @CommandLine.Option(names = ["-m", "-method"], description = "name of method used in this cluster")
+        String methodName
+        @CommandLine.Parameters ( description =" IP address for each node") List <String> nodeIPs
+        // can be placed anywhere in specification but the number of specified IPs must match the number of nodes
+        @CommandLine.Option( names = "-p") String paramString
+        // comma separated type, value pairs with no spaces or other punctuation
+    } // WorkSpecification
 
-  boolean parseEmit(List tokens, List<ParseRecord> buildData) {
-    Integer tokenIndex
-    int tokenSize
-    tokenSize = tokens.size()
-    tokenIndex = findOption(tokens, tokenSize, "-n")
-    if (tokenIndex == null) {
-      println "-n(odes) option missing in Emit specification: $tokens"
-      return false
-    }
-    else { // expecting workers option
-      ParseRecord pr = new ParseRecord()
-      pr.typeName = tokens[0]
-      pr.nodes = Integer.parseInt(tokens[tokenIndex + 1])
-      if ((tokenIndex = findOption(tokens, tokenSize, "-w")) == null){
-        println "-w(orkers) option missing in Emit specification: $tokens"
-        return false
-      }
-      else { // expecting class option
-        pr.workers = Integer.parseInt(tokens[tokenIndex + 1])
-        if ((tokenIndex = findOption(tokens, tokenSize, "-c")) == null){
-          println "-c(lass) option missing in Emit specification: $tokens"
-          return false
+    class CollectSpecification {
+        @CommandLine.Option(names = ["-n", "-nodes"], description = "number of nodes")
+        int nodes
+        @CommandLine.Option(names = ["-w", "-workers"], description = "number of workers per node")
+        int workers
+        @CommandLine.Option(names = ["-cm", "-cmethod"], description = "name of collect method used in this cluster")
+        String collectMethod
+        @CommandLine.Option( names = "-cp") String collectParams
+        // comma separated type, value pairs with no spaces or other punctuation  @CommandLine.Option ( names = "-ip", description =" IP address for each node")
+        @CommandLine.Option(names = ["-fm", "-fmethod"], description = "name of finalise method used in this cluster")
+        String finaliseMethod
+        @CommandLine.Option( names = "-fp") String finaliseParams
+        // comma separated type, value pairs with no spaces or other punctuation  @CommandLine.Option ( names = "-ip", description =" IP address for each node")
+        @CommandLine.Parameters ( description =" IP address for each node") List <String> nodeIPs
+        // can be placed anywhere in specification but the number of specified IPs must match the number of nodes
+    } // CollectSpecification
+
+    boolean checkIPUniqueness (List<ParseRecord> buildData){
+        List <String> usedIPs = []
+        buildData.each {record ->
+            if ( record.fixedIPAddresses != null)
+                usedIPs = usedIPs + record.fixedIPAddresses
         }
-        else {
-          pr.classNameString = tokens[tokenIndex + 1]
-          buildData << pr
-        } //class
-      } //workers
-    } // nodes
-    // remaining options are not mandatory
-    return true
-  } // parseEmit
+        int totalSize = usedIPs.size()
+        if (totalSize != usedIPs.toUnique().size()){
+            println "The specified IPs are not unique $usedIPs"
+            return false
+        }
+        else
+            return true
+    } // checkIPUniqueness
 
-  boolean parseWork(List tokens, List<ParseRecord> buildData) {
-    Integer tokenIndex
-    int tokenSize
-    tokenSize = tokens.size()
-    tokenIndex = findOption(tokens, tokenSize, "-ip")
-    println "Work nyi"
-    return true
+    boolean parse(){
+        List<ParseRecord> buildData
+        buildData = []
+        new File(inputFileName).eachLine{ String inLine ->
+            List<String> tokens = inLine.tokenize()
+            String lineType = tokens.pop()
+            String[] args = tokens.toArray(new String[0])
+            ParseRecord parseRecord = new ParseRecord()
+            switch (lineType) {
+                case 'host':
+                    HostSpecification host = new HostSpecification()
+                    new CommandLine(host).parseArgs(args)
+                    println "HostIP = ${host.hostIP}"
+                    parseRecord.typeName = lineType
+                    parseRecord.hostAddress = host.hostIP
+                    hostIPAddress = host.hostIP
+                    buildData << parseRecord
+                    break
+                case 'emit':
+                    EmitSpecification emit = new EmitSpecification()
+                    new CommandLine(emit).parseArgs(args)
+                    int totalParamString = emit.nodes * emit.workers
+                    println "Emit: Nodes = ${emit.nodes}, Workers = ${emit.workers}, Class = ${emit.className}, IPs = ${emit.nodeIPs}, Params = ${emit.paramStrings}"
+                    // assumes emitters always have a parameter string associated with them
+                    assert (emit.paramStrings.size() == totalParamString): "Emit must have $totalParamString parameter strings ${emit.paramStrings} supplied "
+                    if (emit.nodeIPs != null)
+                        assert emit.nodes == emit.nodeIPs.size(): "Emit: Number of specified IPs must be same as number of nodes"
+                    parseRecord.typeName = lineType
+                    parseRecord.hostAddress = hostIPAddress
+                    parseRecord.nodes = emit.nodes
+                    parseRecord.workers = emit.workers
+                    parseRecord.classNameString = emit.className
+                    if (emit.nodeIPs != null)
+                        emit.nodeIPs.each { parseRecord.fixedIPAddresses << it }
+                    // deal with the parameter string associated with each emitter
+                    emit.paramStrings.each { String paramSpec ->
+                        List<String> tokenizedParams
+                        tokenizedParams = paramSpec.tokenize(',')
+                        parseRecord.emitParameterString << tokenizedParams
+                    }
+                    buildData << parseRecord
+                    break
+                case 'work':
+                    WorkSpecification work = new WorkSpecification()
+                    new CommandLine(work).parseArgs(args)
+                    println "Work: Nodes = ${work.nodes}, Workers = ${work.workers}, Method = ${work.methodName}, IPs = ${work.nodeIPs}, Params = ${work.paramString}"
+                    if (work.nodeIPs != null)
+                        assert work.nodes == work.nodeIPs.size(): "Work: Number of specified IPs must be same as number of nodes"
+                    parseRecord.typeName = lineType
+                    parseRecord.hostAddress = hostIPAddress
+                    parseRecord.nodes = work.nodes
+                    parseRecord.workers = work.workers
+                    if (work.nodeIPs != null)
+                        work.nodeIPs.each { parseRecord.fixedIPAddresses << it }
+                    parseRecord.methodNameString = work.methodName
+                    if (work.paramString != null)
+                        parseRecord.parameterString = work.paramString.tokenize(',')
+                    buildData << parseRecord
+                    break
+                case 'collect':
+                    CollectSpecification collect = new CollectSpecification()
+                    new CommandLine(collect).parseArgs(args)
+                    println "Collect: Nodes = ${collect.nodes}, Workers = ${collect.workers}, " +
+                            "CMethod = ${collect.collectMethod}, CParams = ${collect.collectParams}, " +
+                            "FMethod = ${collect.finaliseMethod}, FParams = ${collect.finaliseParams}, IPs = ${collect.nodeIPs}"
+                    if (collect.nodeIPs != null)
+                        assert collect.nodes == collect.nodeIPs.size(): "Collect: Number of specified IPs must be same as number of nodes"
+                    parseRecord.typeName = lineType
+                    parseRecord.hostAddress = hostIPAddress
+                    parseRecord.nodes = collect.nodes
+                    parseRecord.workers = collect.workers
+                    parseRecord.methodNameString = collect.collectMethod
+                    if (collect.collectParams != null)
+                        parseRecord.parameterString = collect.collectParams.tokenize(',')
+                    if (collect.nodeIPs != null)
+                        collect.nodeIPs.each { parseRecord.fixedIPAddresses << it }
+                    parseRecord.finaliseNameString = collect.finaliseMethod
+                    if (collect.finaliseParams != null)
+                        parseRecord.finaliseParameters = collect.finaliseParams.tokenize(',')
+                    buildData << parseRecord
+                    break
+                default:
+                    println "$lineType incorrectly specified"
+            }
+        }  // file each line
+        // check all specified IP addresses for nodes are unique
+        if (checkIPUniqueness(buildData)) {
+            File outFile = new File(outputTextFile)
+            PrintWriter printWriter = outFile.newPrintWriter()
+            buildData.each { printWriter.println "$it" }
+            printWriter.flush()
+            printWriter.close()
+            File outObjFile = new File(outObjectFile)
+            ObjectOutputStream outStream = outObjFile.newObjectOutputStream()
+            buildData.each { outStream << it }
+            outStream.flush()
+            outStream.close()
+            println "Parsing completed - no errors in $inputFileName"
+            return true
+        } else {
+            println "Parsing failed, see errors highlighted above in $inputFileName"
+            return false
+        }
+    }// parse
 
-  } //parseWork
-
-  boolean parseCollect(List tokens, List<ParseRecord> buildData) {
-    Integer tokenIndex
-    int tokenSize
-    tokenSize = tokens.size()
-    tokenIndex = findOption(tokens, tokenSize, "-ip")
-    println "Collect nyi"
-    return true
-
-  } //parseCollect
-
-} //DSLParser class
+}

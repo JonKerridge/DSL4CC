@@ -93,7 +93,7 @@ class DSL4CC_Host implements CSProcess {
     if (!preAllocated) {
       println "Host terminating early - all the required pre-allocated nodes have not been started"
       println "The node processes will be terminated automatically with status -2"
-      for (n in 0..<totalNodes) hostToNodes[n].write(new TerminalIndex(tIndex: -2))
+      for (n in 0..<totalNodes) hostToNodes[n].write(new TerminalIndex(-2))
       System.exit(-2)
     }
     // know that all the preAllocated nodes can be used as is

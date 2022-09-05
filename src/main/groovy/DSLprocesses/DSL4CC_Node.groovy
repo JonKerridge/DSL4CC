@@ -168,6 +168,7 @@ class DSL4CC_Node implements CSProcess {
 //    assert ack.ackValue == 5: "Node $nodeIP expecting to start setup phase 5, got $ack instead"
     String activityName
     List<String> parameters
+    //emit gets one of a list of list of string for parameters collect has a finalise method and params
     if (nodeType == 'emit') activityName = structure[structureIndex].classNameString else activityName = structure[structureIndex].methodNameString
     parameters = structure[structureIndex].parameterString
 //    println "Node $nodeIP with ni= $nodeIndex starting phase 5 type= $nodeType w= $workers, " + "act= $activityName, p= $parameters"
@@ -187,7 +188,7 @@ class DSL4CC_Node implements CSProcess {
               workerToNode: fromWorkers.out(),
               workerID: workerID,
               className: activityName,
-              parameters: parameters))
+              parameters: structure[structureIndex].emitParameterString[w]))
         }
         break
       case 'work':
@@ -218,8 +219,10 @@ class DSL4CC_Node implements CSProcess {
               inputWork: inputWork[workerID],
               workerToNode: fromWorkers.out(),
               workerID: workerID,
-              methodName: activityName,
-              parameters: parameters))
+              methodName: activityName, //collect method and parameters
+              parameters: parameters,
+              finaliseMethodName: structure[structureIndex].finaliseNameString,
+              finaliseParameters: structure[structureIndex].finaliseParameters))
         }
         break
     }  // end switch
