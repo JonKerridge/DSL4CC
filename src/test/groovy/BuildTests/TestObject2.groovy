@@ -1,9 +1,9 @@
 package BuildTests
 
-class TestObject1 implements Serializable{
+class TestObject2 implements Serializable{
   int value
 
-  TestObject1( int value){
+  TestObject2(int value){
     this.value = value
 //    println "Created TO1: $value"
   }
@@ -15,14 +15,14 @@ class TestObject1 implements Serializable{
 
   static List results = []
   void collect(List params){
-    results << value  //test1
-//    results << value - params[0]  //test2
+//    results << value  //test1
+    results << value - params[0]  //test2
 //    println "Final TO1 value is $value"
   }
 
   void finalise(List params){
 //    println "Results= $results"
-    for ( i in params[0] ..< params[1])
+    for ( i in params[0] .. params[1])
       assert results.contains(i):"Value $i missing from collected results"
     println "All expected values were present"
   }

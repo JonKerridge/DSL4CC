@@ -28,6 +28,7 @@ class DSL4CC_Worker implements CSProcess{
 
   @Override
   void run() {
+    println "Worker $workerID, $methodName, $parameters "
 //    String s =  " "
 //    for ( w in 0 ..< outputWork.size())
 //      s = s + "\now[$w] = ${outputWork[w].getLocation()}"

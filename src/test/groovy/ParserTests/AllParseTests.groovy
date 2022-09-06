@@ -5,11 +5,8 @@ import org.junit.runner.JUnitCore
 
 result = JUnitCore.runClasses (
     ParseTest1,
-    ParseTest1a,
-    ParseTest1b,
-    ParseTest1c,
-    ParseTest1d,
-    ParseTest1e,
+    ParseTest2,
+
 )
 
 String message = "Ran: " + result.getRunCount() +

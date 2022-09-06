@@ -1,4 +1,0 @@
-host -ip 127.0.0.1
-emit -nodes 1 -workers 1 -ip1 127.0.0.2 -c Test1Emit -p int 100
-work -n 2 -wrkers 4 -ip1 127.0.0.3 -ip2 127.0.0.4 -m test1Method1
-collect -n 1 -w 1 -m collect

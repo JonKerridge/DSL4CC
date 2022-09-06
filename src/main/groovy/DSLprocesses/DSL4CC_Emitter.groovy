@@ -81,9 +81,9 @@ class DSL4CC_Emitter implements CSProcess{
 
     Class EmitClass = Class.forName(className)
     List parameterValues = extractParams(parameters)
-    println "Emit $workerID has params = $parameterValues"
+//    println "Emit $workerID has params = $parameterValues"
     Object emitClass = EmitClass.newInstance(parameterValues)
-    println "Emit $workerID class created"
+//    println "Emit $workerID class created"
 
     def ec = emitClass.create() as EmittedObject
     RequestSend rsIndex = new RequestSend(workerID)
