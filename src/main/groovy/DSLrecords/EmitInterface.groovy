@@ -1,5 +1,5 @@
 package DSLrecords
 
 interface EmitInterface <T> {
-  DSLrecords.EmittedObject create()
+  EmittedObject create()
 }
