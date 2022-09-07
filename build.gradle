@@ -3,7 +3,9 @@ plugins {
 }
 
 group 'jonkerridge'
-version '1.0.0'
+version '1.0.1'
+// version 1.0.1 introduces Collect Object with collect and finalise methods and
+// three phase work process, with consequent changes to the parser
 
 String propertyFileName = "C:/Github/gradle.properties"
 File propsFile = new File(propertyFileName)
