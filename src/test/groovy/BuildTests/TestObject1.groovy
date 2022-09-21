@@ -8,8 +8,12 @@ class TestObject1 implements Serializable{
 //    println "Created TO1: $value"
   }
 
+  TestObject1(){
+    this.value = 0
+  }
+
   void updateMethod(List params){
-    value = value + params[0]
+    value = value + (params[0] as int)
 //    println "Updated TO1 from $initValue to $value"
   }
 
@@ -20,11 +24,19 @@ class TestObject1 implements Serializable{
 //    println "Final TO1 value is $value"
   }
 
-  void finalise(List params){
+  static void finalise(List params){
 //    println "Results= $results"
-    for ( i in params[0] ..< params[1])
-      assert results.contains(i):"Value $i missing from collected results"
+    List testSet = []
+    for ( i in params[0] .. params[1]) {
+      testSet << i
+      assert results.contains(i): "Value $i missing from collected results"
+    }
     println "All expected values were present"
+
+    results.each{ int v ->
+      assert testSet.contains(v):"Value $v fails the finalise check"
+    }
+    println "Correctness test validated"
   }
 
 

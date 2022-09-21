@@ -2,33 +2,42 @@ package DSLprocesses
 
 import DSLrecords.RequestSend
 import DSLrecords.TerminalIndex
+import groovy_jcsp.ChannelOutputList
 import jcsp.lang.CSProcess
 import jcsp.lang.ChannelOutput
 import jcsp.net2.NetAltingChannelInput
 import jcsp.net2.NetChannelOutput
 import jcsp.net2.NetSharedChannelInput
 
-class DSL4CC_Collecter implements CSProcess{
+class DSL4CC_Worker_Single implements CSProcess{
 
   // net channel connections to and from Host
   NetChannelOutput toHost     // writes to Host: fromNodes
   NetSharedChannelInput fromHost  // reads from Host: hostToNodes[i] vcn = 1
 
-
   // net channels
-  NetChannelOutput requestWork
-  NetAltingChannelInput inputWork
+  ChannelOutputList outputWork
+  NetChannelOutput requestWork, requestIndex
+  NetAltingChannelInput inputWork, useIndex
   // internal channels to Node
   ChannelOutput workerToNode
-  int workerID    // relative to the cluster
-  //TODO collect now has collect and finalise methods both with their own parameter strings
+  int workerID    // relative to the cluster not the node
   String methodName
-  List <String> parameters
-  String finaliseMethodName
-  List <String> finaliseParameters
+  List <String> parameters    // String representations of the parameter values
 
   @Override
   void run() {
+    println "Worker $workerID, $methodName, $parameters "
+//    String s =  " "
+//    for ( w in 0 ..< outputWork.size())
+//      s = s + "\now[$w] = ${outputWork[w].getLocation()}"
+//    println "Worker $workerID, $methodName, $parameters, " +
+//        "\nrw = ${requestWork.getLocation()}, " +
+//        "\niw = ${inputWork.getLocation()}," +
+//        "\nri = ${requestIndex.getLocation()}" +
+//        "\nui = ${useIndex.getLocation()}," +
+//        "\n$s"
+
     def extractParams = { List pList ->
 //      println "params to be processed = $pList"
       List params = []
@@ -68,42 +77,32 @@ class DSL4CC_Collecter implements CSProcess{
 //      println "returned params = $params"
       return params
     } // extract params
-    println "Cluster worker $workerID, $parameters"
-//        "\nrw = ${requestWork.getLocation()}, " +
-//        "\niw = ${inputWork.getLocation()}"
+    List parameterValues = extractParams(parameters)
+//    println "Worker $methodName $workerID has started with params $parameterValues"
 
-    List parameterValues, finaliseParameterValues
-    parameterValues = []
-    if (parameters != null )  parameterValues = extractParams(parameters)
-    if (finaliseParameters != null )  finaliseParameterValues = extractParams(finaliseParameters)
-    println "Collecter $workerID, $methodName, $parameterValues, $finaliseMethodName, $finaliseParameterValues"
-
-    Class CollectClass
-
+//    CSTimer timer = new CSTimer()
     def inData
-    RequestSend workRequest
+    RequestSend workRequest, indexRequest
     workRequest = new RequestSend(workerID)
-//    println "Collect $workerID has created request $workRequest"
+    indexRequest = new RequestSend(workerID)
+//    println "Worker $methodName $workerID sending work request $workRequest"
     requestWork.write(workRequest)
-//    println "Collect $workerID has sent workRequest"
+//    println "Worker $methodName $workerID has sent workRequest $workRequest"
     inData = inputWork.read()
-//    println "Collect $workerID has read $inData"
-    // get its class name and create an instance
-    String className = inData.getClass().getName()
-    CollectClass = Class.forName(className)
-    Object collectClass = CollectClass.newInstance()
-    while (!(inData instanceof TerminalIndex)) {
+//    println "Worker $methodName $workerID has read $inData"
+    while (!(inData instanceof TerminalIndex)){
       inData.&"$methodName"(parameterValues)
-      requestWork.write(new RequestSend(workerID))
+//      timer.sleep(10)
+      requestIndex.write(indexRequest)
+      RequestSend use = (useIndex.read() as RequestSend)
+      outputWork[use.index].write(inData)
+      requestWork.write(workRequest)
       inData = inputWork.read()
     }
-    //call the finalise method if it exists
-    if (finaliseMethodName != null) collectClass.&"$finaliseMethodName"(finaliseParameterValues)
-
     // a termination has been read, tell the node
-//    println "Collect $workerID has read termination"
+//    println "Worker $methodName $workerID has read termination"
     TerminalIndex terminalIndex = new TerminalIndex(workerID)
     workerToNode.write(terminalIndex)
-    println "Collector $workerID has terminated"
+//    println "Worker $workerID with $methodName has terminated"
   }
 }

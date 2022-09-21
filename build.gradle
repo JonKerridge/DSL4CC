@@ -5,7 +5,7 @@ plugins {
 group 'jonkerridge'
 version '1.0.1'
 // version 1.0.1 introduces Collect Object with collect and finalise methods and
-// three phase work process, with consequent changes to the parser
+// three phase work process, with consequent changes to the parser will be introduced in v1.0.2
 
 String propertyFileName = "C:/Github/gradle.properties"
 File propsFile = new File(propertyFileName)
@@ -34,10 +34,10 @@ repositories {
 
 
 dependencies {
-    implementation 'org.codehaus.groovy:groovy-all:3.0.12'
+    implementation 'org.codehaus.groovy:groovy-all:3.0.13'
     implementation 'cspforjava:jcsp:1.1.9'
     implementation 'jonkerridge:groovy_jcsp:1.1.10'
-    implementation 'org.codehaus.groovy:groovy-cli-picocli:3.0.12'
+    implementation 'org.codehaus.groovy:groovy-cli-picocli:3.0.13'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 }

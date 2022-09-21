@@ -8,6 +8,8 @@ class TestObject2 implements Serializable{
 //    println "Created TO1: $value"
   }
 
+  TestObject2(){}
+
   void updateMethod(List params){
     value = value + params[0]
 //    println "Updated TO1 from $initValue to $value"

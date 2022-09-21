@@ -169,7 +169,8 @@ class DSL4CC_Node implements CSProcess {
     String activityName
     List<String> parameters
     //emit gets one of a list of list of string for parameters collect has a finalise method and params
-    if (nodeType == 'emit') activityName = structure[structureIndex].classNameString else activityName = structure[structureIndex].methodNameString
+    if (nodeType == 'emit') activityName = structure[structureIndex].classNameString
+    else activityName = structure[structureIndex].methodNameString
     parameters = structure[structureIndex].parameterString
 //    println "Node $nodeIP with ni= $nodeIndex starting phase 5 type= $nodeType w= $workers, " + "act= $activityName, p= $parameters"
     Any2OneChannel fromWorkers = Channel.any2one()
@@ -220,9 +221,9 @@ class DSL4CC_Node implements CSProcess {
               workerToNode: fromWorkers.out(),
               workerID: workerID,
               methodName: activityName, //collect method and parameters
-              parameters: parameters,
-              finaliseMethodName: structure[structureIndex].finaliseNameString,
-              finaliseParameters: structure[structureIndex].finaliseParameters))
+              parameters: structure[structureIndex].collectParameterString[w],
+              finaliseMethodName: structure[structureIndex].finaliseNameString, // finalise method and params
+              finaliseParameters: structure[structureIndex].finaliseParameterString[w]))
         }
         break
     }  // end switch

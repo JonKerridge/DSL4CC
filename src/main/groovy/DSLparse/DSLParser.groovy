@@ -28,7 +28,8 @@ class DSLParser {
         @CommandLine.Parameters ( description =" IP address for each node") List <String> nodeIPs
         // can be placed anywhere in specification but the number of specified IPs must match the number of nodes
         @CommandLine.Option( names = "-p", split = "!") List paramStrings
-        // comma separated type, value pairs with no spaces, each string separated by ! with no spaces
+        // comma separated type, value pairs with no spaces, each string separated by ! and with NO spaces
+        // the number of parameter strings MUST match the value of nodes * workers
     } // EmitSpecification
 
     class WorkSpecification {
@@ -51,12 +52,12 @@ class DSLParser {
         int workers
         @CommandLine.Option(names = ["-cm", "-cmethod"], description = "name of collect method used in this cluster")
         String collectMethod
-        @CommandLine.Option( names = "-cp") String collectParams
+        @CommandLine.Option( names = "-cp", split = "!") List collectParamStrings
         // comma separated type, value pairs with no spaces or other punctuation  @CommandLine.Option ( names = "-ip", description =" IP address for each node")
         @CommandLine.Option(names = ["-fm", "-fmethod"], description = "name of finalise method used in this cluster")
         String finaliseMethod
-        @CommandLine.Option( names = "-fp") String finaliseParams
-        // comma separated type, value pairs with no spaces or other punctuation  @CommandLine.Option ( names = "-ip", description =" IP address for each node")
+        @CommandLine.Option( names = "-fp", split = "!") List finaliseParamStrings
+        // comma separated type, value pairs with no spaces or other punctuation
         @CommandLine.Parameters ( description =" IP address for each node") List <String> nodeIPs
         // can be placed anywhere in specification but the number of specified IPs must match the number of nodes
     } // CollectSpecification
@@ -110,7 +111,7 @@ class DSLParser {
                     parseRecord.classNameString = emit.className
                     if (emit.nodeIPs != null)
                         emit.nodeIPs.each { parseRecord.fixedIPAddresses << it }
-                    // deal with the parameter string associated with each emitter
+                    // deal with the mandatory parameter string associated with each emitter
                     emit.paramStrings.each { String paramSpec ->
                         List<String> tokenizedParams
                         tokenizedParams = paramSpec.tokenize(',')
@@ -139,8 +140,8 @@ class DSLParser {
                     CollectSpecification collect = new CollectSpecification()
                     new CommandLine(collect).parseArgs(args)
                     println "Collect: Nodes = ${collect.nodes}, Workers = ${collect.workers}, " +
-                            "CMethod = ${collect.collectMethod}, CParams = ${collect.collectParams}, " +
-                            "FMethod = ${collect.finaliseMethod}, FParams = ${collect.finaliseParams}, IPs = ${collect.nodeIPs}"
+                            "CMethod = ${collect.collectMethod}, CParams = ${collect.collectParamStrings}, " +
+                            "FMethod = ${collect.finaliseMethod}, FParams = ${collect.finaliseParamStrings}, IPs = ${collect.nodeIPs}"
                     if (collect.nodeIPs != null)
                         assert collect.nodes == collect.nodeIPs.size(): "Collect: Number of specified IPs must be same as number of nodes"
                     parseRecord.typeName = lineType
@@ -148,13 +149,21 @@ class DSLParser {
                     parseRecord.nodes = collect.nodes
                     parseRecord.workers = collect.workers
                     parseRecord.methodNameString = collect.collectMethod
-                    if (collect.collectParams != null)
-                        parseRecord.parameterString = collect.collectParams.tokenize(',')
                     if (collect.nodeIPs != null)
                         collect.nodeIPs.each { parseRecord.fixedIPAddresses << it }
+                    if (collect.collectParamStrings != null)
+                        collect.collectParamStrings.each { String paramSpec ->
+                            List<String> tokenizedParams
+                            tokenizedParams = paramSpec.tokenize(',')
+                            parseRecord.collectParameterString << tokenizedParams
+                        }
                     parseRecord.finaliseNameString = collect.finaliseMethod
-                    if (collect.finaliseParams != null)
-                        parseRecord.finaliseParameters = collect.finaliseParams.tokenize(',')
+                    if (collect.finaliseParamStrings != null)
+                        collect.finaliseParamStrings.each { String paramSpec ->
+                            List<String> tokenizedParams
+                            tokenizedParams = paramSpec.tokenize(',')
+                            parseRecord.finaliseParameterString << tokenizedParams
+                        }
                     buildData << parseRecord
                     break
                 default:
