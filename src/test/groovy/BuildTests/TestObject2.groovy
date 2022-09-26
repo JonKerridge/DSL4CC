@@ -24,8 +24,9 @@ class TestObject2 implements Serializable{
 
   void finalise(List params){
 //    println "Results= $results"
-    for ( i in params[0] .. params[1])
-      assert results.contains(i):"Value $i missing from collected results"
+    results.each { assert ((it <= params[1]) && (it >= params[0])) : "Result $it is not between ${params[0]} and ${params[1]}"}
+//    for ( i in params[0] .. params[1])
+//      assert results.contains(i):"Value $i missing from collected results"
     println "All expected values were present"
   }
 

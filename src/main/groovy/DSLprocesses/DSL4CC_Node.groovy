@@ -168,11 +168,11 @@ class DSL4CC_Node implements CSProcess {
 //    assert ack.ackValue == 5: "Node $nodeIP expecting to start setup phase 5, got $ack instead"
     String activityName
     List<String> parameters
-    //emit gets one of a list of list of string for parameters collect has a finalise method and params
+    //emit gets one of a list of list of string for collectParameters collect has a finalise method and params
     if (nodeType == 'emit') activityName = structure[structureIndex].classNameString
     else activityName = structure[structureIndex].methodNameString
     parameters = structure[structureIndex].parameterString
-//    println "Node $nodeIP with ni= $nodeIndex starting phase 5 type= $nodeType w= $workers, " + "act= $activityName, p= $parameters"
+//    println "Node $nodeIP with ni= $nodeIndex starting phase 5 type= $nodeType w= $workers, " + "act= $activityName, p= $collectParameters"
     Any2OneChannel fromWorkers = Channel.any2one()
     List<ProcessManager> nodeProcessManagers = []
     boolean emitWorkNode = true
@@ -189,7 +189,7 @@ class DSL4CC_Node implements CSProcess {
               workerToNode: fromWorkers.out(),
               workerID: workerID,
               className: activityName,
-              parameters: structure[structureIndex].emitParameterString[w]))
+              parameters: structure[structureIndex].emitParameterString[workerID]))
         }
         break
       case 'work':
@@ -217,13 +217,14 @@ class DSL4CC_Node implements CSProcess {
               toHost: toHost,
               fromHost: fromHost,
               requestWork: requestWork,
-              inputWork: inputWork[workerID],
+              inputWork: inputWork[w],
               workerToNode: fromWorkers.out(),
               workerID: workerID,
-              methodName: activityName, //collect method and parameters
-              parameters: structure[structureIndex].collectParameterString[w],
+              outFileName: structure[structureIndex].outFileName,
+              collectMethodName: activityName, //collect method and collectParameters
+              collectParameters: structure[structureIndex].collectParameterString[workerID],
               finaliseMethodName: structure[structureIndex].finaliseNameString, // finalise method and params
-              finaliseParameters: structure[structureIndex].finaliseParameterString[w]))
+              finaliseParameters: structure[structureIndex].finaliseParameterString[workerID]))
         }
         break
     }  // end switch

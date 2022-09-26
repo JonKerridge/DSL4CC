@@ -31,7 +31,7 @@ class DSL4CC_Worker_Three implements CSProcess{
 //    String s =  " "
 //    for ( w in 0 ..< outputWork.size())
 //      s = s + "\now[$w] = ${outputWork[w].getLocation()}"
-//    println "Worker $workerID, $methodName, $parameters, " +
+//    println "Worker $workerID, $collectMethodName, $collectParameters, " +
 //        "\nrw = ${requestWork.getLocation()}, " +
 //        "\niw = ${inputWork.getLocation()}," +
 //        "\nri = ${requestIndex.getLocation()}" +
@@ -78,18 +78,18 @@ class DSL4CC_Worker_Three implements CSProcess{
       return params
     } // extract params
     List parameterValues = extractParams(parameters)
-//    println "Worker $methodName $workerID has started with params $parameterValues"
+//    println "Worker $collectMethodName $workerID has started with params $parameterValues"
 
 //    CSTimer timer = new CSTimer()
     def inData
     RequestSend workRequest, indexRequest
     workRequest = new RequestSend(workerID)
     indexRequest = new RequestSend(workerID)
-//    println "Worker $methodName $workerID sending work request $workRequest"
+//    println "Worker $collectMethodName $workerID sending work request $workRequest"
     requestWork.write(workRequest)
-//    println "Worker $methodName $workerID has sent workRequest $workRequest"
+//    println "Worker $collectMethodName $workerID has sent workRequest $workRequest"
     inData = inputWork.read()
-//    println "Worker $methodName $workerID has read $inData"
+//    println "Worker $collectMethodName $workerID has read $inData"
     while (!(inData instanceof TerminalIndex)){
       inData.&"$methodName"(parameterValues)
 //      timer.sleep(10)
@@ -100,9 +100,9 @@ class DSL4CC_Worker_Three implements CSProcess{
       inData = inputWork.read()
     }
     // a termination has been read, tell the node
-//    println "Worker $methodName $workerID has read termination"
+//    println "Worker $collectMethodName $workerID has read termination"
     TerminalIndex terminalIndex = new TerminalIndex(workerID)
     workerToNode.write(terminalIndex)
-//    println "Worker $workerID with $methodName has terminated"
+//    println "Worker $workerID with $collectMethodName has terminated"
   }
 }

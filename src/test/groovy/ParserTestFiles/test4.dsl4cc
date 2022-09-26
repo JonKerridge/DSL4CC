@@ -1,0 +1,4 @@
+host -ip 127.0.0.1
+emit -nodes 2 -workers 1 -c BuildTests.EmitTest3 -p int,0,int,99!int,100,int,199
+work -n 2 -w 4 -m updateMethod -p int,500
+collect -n 2 -w 2 -cm collect -cp int,500!int,500!int,500!int,500 -f TO3results

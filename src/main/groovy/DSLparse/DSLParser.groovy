@@ -52,11 +52,13 @@ class DSLParser {
         int workers
         @CommandLine.Option(names = ["-cm", "-cmethod"], description = "name of collect method used in this cluster")
         String collectMethod
-        @CommandLine.Option( names = "-cp", split = "!") List collectParamStrings
-        // comma separated type, value pairs with no spaces or other punctuation  @CommandLine.Option ( names = "-ip", description =" IP address for each node")
+        @CommandLine.Option( names = ["-f", "-file"]) String outFileName  // base name of object file to which collected records are written
+        // comma separated type, value pairs with no spaces or other punctuation
+        @CommandLine.Option( names = "-cp", split = "!") List collectParamStrings  // parameters of the collect method, one per collecter process
+        // comma separated type, value pairs with no spaces or other punctuation
         @CommandLine.Option(names = ["-fm", "-fmethod"], description = "name of finalise method used in this cluster")
         String finaliseMethod
-        @CommandLine.Option( names = "-fp", split = "!") List finaliseParamStrings
+        @CommandLine.Option( names = "-fp", split = "!") List finaliseParamStrings  // parameters of the finalise method, one per collecter process
         // comma separated type, value pairs with no spaces or other punctuation
         @CommandLine.Parameters ( description =" IP address for each node") List <String> nodeIPs
         // can be placed anywhere in specification but the number of specified IPs must match the number of nodes
@@ -139,16 +141,22 @@ class DSLParser {
                 case 'collect':
                     CollectSpecification collect = new CollectSpecification()
                     new CommandLine(collect).parseArgs(args)
-                    println "Collect: Nodes = ${collect.nodes}, Workers = ${collect.workers}, " +
+                    println "Collect: Nodes = ${collect.nodes}, Workers = ${collect.workers}, OutFile = ${collect.outFileName}, " +
                             "CMethod = ${collect.collectMethod}, CParams = ${collect.collectParamStrings}, " +
                             "FMethod = ${collect.finaliseMethod}, FParams = ${collect.finaliseParamStrings}, IPs = ${collect.nodeIPs}"
                     if (collect.nodeIPs != null)
                         assert collect.nodes == collect.nodeIPs.size(): "Collect: Number of specified IPs must be same as number of nodes"
+                    int totalParamString = collect.nodes * collect.workers
+                    if (collect.collectParamStrings != null)
+                        assert (collect.collectParamStrings.size() == totalParamString): "Collect must have $totalParamString parameter strings ${collect.collectParamStrings} supplied "
+                    if (collect.finaliseParamStrings != null)
+                        assert (collect.finaliseParamStrings.size() == totalParamString): "Collect must have $totalParamString parameter strings ${collect.finaliseParamStrings} supplied "
                     parseRecord.typeName = lineType
                     parseRecord.hostAddress = hostIPAddress
                     parseRecord.nodes = collect.nodes
                     parseRecord.workers = collect.workers
                     parseRecord.methodNameString = collect.collectMethod
+                    parseRecord.outFileName = collect.outFileName
                     if (collect.nodeIPs != null)
                         collect.nodeIPs.each { parseRecord.fixedIPAddresses << it }
                     if (collect.collectParamStrings != null)

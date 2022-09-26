@@ -5,11 +5,11 @@ import DSLrecords.RequestSend
 import DSLrecords.TerminalIndex
 import groovy_jcsp.ChannelOutputList
 import jcsp.lang.CSProcess
-import jcsp.lang.CSTimer
 import jcsp.lang.ChannelOutput
 import jcsp.net2.NetAltingChannelInput
 import jcsp.net2.NetChannelOutput
 import jcsp.net2.NetSharedChannelInput
+import DSLrecords.ExtractParameters
 
 class DSL4CC_Emitter implements CSProcess{
 
@@ -29,45 +29,45 @@ class DSL4CC_Emitter implements CSProcess{
 
   @Override
   void run() {
-    def extractParams = { List pList ->
-//      println "params to be processed = $pList"
-      List params = []
-      int pointer
-      pointer = 0
-      int pSize = pList.size()   // each param spec comprises type-specification value
-      while( pointer < pSize ){
-        String pType = pList[pointer]
-        pointer++
-        String pString = pList[pointer]
-        pointer++
-//        println "param tokens = $pType :: $pString"
-        switch (pType){
-          case 'int':
-            params << Integer.parseInt(pString)
-            break
-          case 'float':
-            params << Float.parseFloat(pString)
-            break
-          case 'String':
-            params << pString
-            break
-          case 'double':
-            params << Double.parseDouble(pString)
-            break
-          case 'long':
-            params << Long.parseLong(pString)
-            break
-          case 'boolean':
-            params << Boolean.parseBoolean(pString)
-            break
-          default:
-            println "Processing parameter string unexpectedly found type = $pType, value = $pString]"
-            break
-        } // end switch
-      } // while
-//      println "returned params = $params"
-      return params
-    } // extract params
+//    def extractParams = { List pList ->
+////      println "params to be processed = $pList"
+//      List params = []
+//      int pointer
+//      pointer = 0
+//      int pSize = pList.size()   // each param spec comprises type-specification value
+//      while( pointer < pSize ){
+//        String pType = pList[pointer]
+//        pointer++
+//        String pString = pList[pointer]
+//        pointer++
+////        println "param tokens = $pType :: $pString"
+//        switch (pType){
+//          case 'int':
+//            params << Integer.parseInt(pString)
+//            break
+//          case 'float':
+//            params << Float.parseFloat(pString)
+//            break
+//          case 'String':
+//            params << pString
+//            break
+//          case 'double':
+//            params << Double.parseDouble(pString)
+//            break
+//          case 'long':
+//            params << Long.parseLong(pString)
+//            break
+//          case 'boolean':
+//            params << Boolean.parseBoolean(pString)
+//            break
+//          default:
+//            println "Processing parameter string unexpectedly found type = $pType, value = $pString]"
+//            break
+//        } // end switch
+//      } // while
+////      println "returned params = $params"
+//      return params
+//    } // extract params
 //    String s =  " "
 //    for ( w in 0 ..< outputWork.size())
 //      s = s + "ow[$w] = ${outputWork[w].getLocation()}"
@@ -80,7 +80,7 @@ class DSL4CC_Emitter implements CSProcess{
 //    CSTimer timer = new CSTimer()
 
     Class EmitClass = Class.forName(className)
-    List parameterValues = extractParams(parameters)
+    List parameterValues = ExtractParameters.extractParams(parameters)
 //    println "Emit $workerID has params = $parameterValues"
     Object emitClass = EmitClass.newInstance(parameterValues)
 //    println "Emit $workerID class created"

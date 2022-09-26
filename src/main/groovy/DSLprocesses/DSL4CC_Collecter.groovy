@@ -1,5 +1,6 @@
 package DSLprocesses
 
+import DSLrecords.ExtractParameters
 import DSLrecords.RequestSend
 import DSLrecords.TerminalIndex
 import jcsp.lang.CSProcess
@@ -21,65 +22,25 @@ class DSL4CC_Collecter implements CSProcess{
   // internal channels to Node
   ChannelOutput workerToNode
   int workerID    // relative to the cluster
-  //TODO collect now has collect and finalise methods both with their own parameter strings
-  String methodName
-  List <String> parameters
+  String outFileName
+  String collectMethodName
+  List <String> collectParameters
   String finaliseMethodName
   List <String> finaliseParameters
 
   @Override
   void run() {
-    def extractParams = { List pList ->
-//      println "params to be processed = $pList"
-      List params = []
-      int pointer
-      pointer = 0
-      int pSize = pList.size()   // each param spec comprises type-specification value
-      while( pointer < pSize ){
-        String pType = pList[pointer]
-        pointer++
-        String pString = pList[pointer]
-        pointer++
-//        println "param tokens = $pType :: $pString"
-        switch (pType){
-          case 'int':
-            params << Integer.parseInt(pString)
-            break
-          case 'float':
-            params << Float.parseFloat(pString)
-            break
-          case 'String':
-            params << pString
-            break
-          case 'double':
-            params << Double.parseDouble(pString)
-            break
-          case 'long':
-            params << Long.parseLong(pString)
-            break
-          case 'boolean':
-            params << Boolean.parseBoolean(pString)
-            break
-          default:
-            println "Processing parameter string unexpectedly found type = $pType, value = $pString]"
-            break
-        } // end switch
-      } // while
-//      println "returned params = $params"
-      return params
-    } // extract params
-    println "Cluster worker $workerID, $parameters"
-//        "\nrw = ${requestWork.getLocation()}, " +
-//        "\niw = ${inputWork.getLocation()}"
+    String outFileString = "./${outFileName}${workerID}.dsl4ccout"
+    File objFile = new File(outFileString)
+    def outStream = objFile.newObjectOutputStream()
 
-    List parameterValues, finaliseParameterValues
-    parameterValues = []
-    if (parameters != null )  parameterValues = extractParams(parameters)
-    if (finaliseParameters != null )  finaliseParameterValues = extractParams(finaliseParameters)
-    println "Collecter $workerID, $methodName, $parameterValues, $finaliseMethodName, $finaliseParameterValues"
+    List collectParameterValues, finaliseParameterValues
+    collectParameterValues = []
+    if (collectParameters != null )  collectParameterValues = ExtractParameters.extractParams(collectParameters)
+    if (finaliseParameters != null )  finaliseParameterValues = ExtractParameters.extractParams(finaliseParameters)
+    println "Collecter $workerID, $collectMethodName, $collectParameterValues, $finaliseMethodName, $finaliseParameterValues"
 
     Class CollectClass
-
     def inData
     RequestSend workRequest
     workRequest = new RequestSend(workerID)
@@ -91,15 +52,17 @@ class DSL4CC_Collecter implements CSProcess{
     // get its class name and create an instance
     String className = inData.getClass().getName()
     CollectClass = Class.forName(className)
-    Object collectClass = CollectClass.newInstance()
+    Object collectClass = CollectClass.getDeclaredConstructor().newInstance()
     while (!(inData instanceof TerminalIndex)) {
-      inData.&"$methodName"(parameterValues)
+      inData.&"$collectMethodName"(collectParameterValues)
+      outStream.writeObject(inData)
       requestWork.write(new RequestSend(workerID))
       inData = inputWork.read()
     }
-    //call the finalise method if it exists
+    //call the finalise method if it exists and close the output stream
     if (finaliseMethodName != null) collectClass.&"$finaliseMethodName"(finaliseParameterValues)
-
+    outStream.flush()
+    outStream.close()
     // a termination has been read, tell the node
 //    println "Collect $workerID has read termination"
     TerminalIndex terminalIndex = new TerminalIndex(workerID)
