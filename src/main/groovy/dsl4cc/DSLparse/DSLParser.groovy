@@ -1,6 +1,6 @@
-package DSLparse
+package dsl4cc.DSLparse
 
-import DSLrecords.ParseRecord
+import dsl4cc.DSLrecords.ParseRecord
 import groovyjarjarpicocli.CommandLine
 
 class DSLParser {
@@ -43,6 +43,9 @@ class DSLParser {
         // can be placed anywhere in specification but the number of specified IPs must match the number of nodes
         @CommandLine.Option( names = "-p") String paramString
         // comma separated type, value pairs with no spaces or other punctuation
+        // three phase worker additions
+        @CommandLine.Option(names = "-3p", description = "flag to indicate three phase worker")
+        boolean threePhase
     } // WorkSpecification
 
     class CollectSpecification {

@@ -1,4 +1,4 @@
-package DSLrecords
+package dsl4cc.DSLrecords
 
 import jcsp.net2.NetChannelLocation
 import jcsp.net2.NetLocation

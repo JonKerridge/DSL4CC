@@ -1,6 +1,6 @@
 package BuildTests
 
-import DSLprocesses.DSL4CC_Node
+import dsl4cc.DSLprocesses.DSL4CC_Node
 import groovy_jcsp.PAR
 
 String hostIP = "127.0.0.1"

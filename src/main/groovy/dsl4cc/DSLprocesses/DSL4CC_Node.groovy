@@ -1,9 +1,9 @@
-package DSLprocesses
+package dsl4cc.DSLprocesses
 
-import DSLrecords.Acknowledgement
-import DSLrecords.ChannelData
-import DSLrecords.ParseRecord
-import DSLrecords.TerminalIndex
+import dsl4cc.DSLrecords.Acknowledgement
+import dsl4cc.DSLrecords.ChannelData
+import dsl4cc.DSLrecords.ParseRecord
+import dsl4cc.DSLrecords.TerminalIndex
 import groovy_jcsp.ChannelInputList
 import groovy_jcsp.ChannelOutputList
 import jcsp.lang.Any2OneChannel
@@ -22,7 +22,7 @@ class DSL4CC_Node implements CSProcess {
   void run() {
     List<ParseRecord> structure
     //created in phase 1
-    NetChannelOutput toHost     // writes to Host: fromNodes
+    NetSharedChannelOutput toHost     // writes to Host: fromNodes
     NetSharedChannelInput fromHost  // reads from Host: hostToNodes[i] vcn = 1
     NetAltingChannelInput fromManager  // reads from node's toManager vcn = 2
 
@@ -41,7 +41,7 @@ class DSL4CC_Node implements CSProcess {
     fromHost = NetChannel.numberedNet2Any(1) //, new CodeLoadingChannelFilter.FilterRX())
     fromManager = NetChannel.numberedNet2One(2)
     def hostAddress = new TCPIPNodeAddress(hostIP, 1000)
-    toHost = NetChannel.one2net(hostAddress, 1)
+    toHost = NetChannel.any2net(hostAddress, 1)
     toHost.write(nodeIP)
 //    println "Node $nodeIP has sent its IP address to host at $hostIP"
     // node can now read in the structure object unless some preAllocated nodes have not been started
@@ -165,7 +165,7 @@ class DSL4CC_Node implements CSProcess {
     toHost.write(ack)
 //    println "Node $nodeIP ready to start the worker processes"
     ack = fromHost.read() as Acknowledgement
-//    assert ack.ackValue == 5: "Node $nodeIP expecting to start setup phase 5, got $ack instead"
+    assert ack.ackValue == 5: "Node $nodeIP expecting to start setup phase 5, got $ack instead"
     String activityName
     List<String> parameters
     //emit gets one of a list of list of string for collectParameters collect has a finalise method and params

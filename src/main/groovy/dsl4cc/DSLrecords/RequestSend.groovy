@@ -1,4 +1,4 @@
-package DSLrecords
+package dsl4cc.DSLrecords
 
 class RequestSend implements  Serializable {
     int index

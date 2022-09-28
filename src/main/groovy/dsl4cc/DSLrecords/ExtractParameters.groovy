@@ -1,4 +1,4 @@
-package DSLrecords
+package dsl4cc.DSLrecords
 
 class ExtractParameters {
   static def extractParams = { List pList ->

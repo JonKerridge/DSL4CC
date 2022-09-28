@@ -1,8 +1,8 @@
-package DSLprocesses
+package dsl4cc.DSLprocesses
 
-import DSLrecords.Acknowledgement
-import DSLrecords.ParseRecord
-import DSLrecords.TerminalIndex
+import dsl4cc.DSLrecords.Acknowledgement
+import dsl4cc.DSLrecords.ParseRecord
+import dsl4cc.DSLrecords.TerminalIndex
 import groovy_jcsp.ChannelInputList
 import groovy_jcsp.ChannelOutputList
 import jcsp.lang.CSProcess
@@ -18,7 +18,7 @@ class DSL4CC_Host implements CSProcess {
 
   String hostIP
   int requiredManagers
-  int totalNodes
+  int totalNodes, totalWorkers
   List<ParseRecord> structure
 
   /**
@@ -29,10 +29,11 @@ class DSL4CC_Host implements CSProcess {
    * @param structure List of ParseRecord describing the infrastructure to be created
    */
 
-  DSL4CC_Host(String hostIP, int requiredManagers, int totalNodes, List<ParseRecord> structure) {
+  DSL4CC_Host(String hostIP, int requiredManagers, int totalNodes, int totalWorkers, List<ParseRecord> structure) {
     this.hostIP = hostIP
     this.requiredManagers = requiredManagers
     this.totalNodes = totalNodes
+    this.totalWorkers = totalWorkers
     this.structure = structure
   }
 
@@ -59,7 +60,7 @@ class DSL4CC_Host implements CSProcess {
 //    println "Active structure is $structure"
     fromNodes = NetChannel.numberedNet2One(1)
 
-    println "Please start $totalNodes node processes using the IP address $nodeIP as host node"
+    println "Please start $totalNodes nodes with $nodeIP as host node; creating $totalWorkers internal processes"
 
     List<String> nodeIPstrings = []
     // assumes nodes have created the corresponding net input channels
@@ -184,7 +185,7 @@ class DSL4CC_Host implements CSProcess {
 //    println "Host - managers have finished Phase 3 - starting 4"
     for (m in 0..<requiredManagers) host2manager[m].out().write(new Acknowledgement(4, hostIP))
     for (n in 0..<totalNodes) hostToNodes[n].write(new Acknowledgement(4, hostIP))
-//    println "Host has initiated phase 4"  // involves interactions between nodes and managers
+    println "Host has initiated phase 4"  // involves interactions between nodes and managers
     acks = []
     for (m in 0..<requiredManagers) acks << (manager2host[m].in().read() as Acknowledgement)
     acks.each {
@@ -194,10 +195,30 @@ class DSL4CC_Host implements CSProcess {
     for (n in 1..totalNodes) acks << (fromNodes.read() as Acknowledgement)
     acks.each { ack -> assert ack.ackValue == 4: "Expecting ack value 4 got ${ack.ackValue} from ${ack.ackString}"
     }
-//    println "Host has finished phase 4"
+    println "Host has finished phase 4"
     // start phase 5
     for (n in 0..<totalNodes) hostToNodes[n].write(new Acknowledgement(5, hostIP))
-//    println "Host has initiated phase 5"  // involves interactions between nodes and managers
+    println "Host has initiated phase 5"  // involves interactions between nodes and managers
+    // all the internal processes will have started
+    // host expects an acknowledgement from each worker process with ack value 6
+    acks = []
+    for (n in 1..totalWorkers) acks << (fromNodes.read() as Acknowledgement)
+    acks.each { ack -> assert ack.ackValue == 6: "Expecting ack value 6 got ${ack.ackValue} from ${ack.ackString}"
+    }
+    println "Host has received acknowledgments from all internal processes"
+    int currentNode
+    currentNode = 0
+    for ( s in 0 .. structureMax) {
+      for (n in 0..<structure[s].nodes) {
+        for (w in 0..<structure[s].workers) {
+//          println "Host acking $s, $n, $w, $currentNode"
+          hostToNodes[currentNode].write(new Acknowledgement(6, hostIP))
+        }
+        currentNode++
+      }
+    }
+    println "Host has completed phase 6"  // involves interactions between host and workers
+
     // waiting for managers to terminate
     for (rm in 0..<requiredManagers) {
       def fh = manager2host[rm].in().read() as Acknowledgement

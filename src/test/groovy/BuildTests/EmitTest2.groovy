@@ -1,7 +1,7 @@
 package BuildTests
 
-import DSLrecords.EmitInterface
-import DSLrecords.EmittedObject
+import dsl4cc.DSLrecords.EmitInterface
+import dsl4cc.DSLrecords.EmittedObject
 
 class EmitTest2 implements  EmitInterface <TestObject2> {
   int initialValue, finalValue, currentValue

@@ -1,6 +1,6 @@
 package BuildTests
 
-import DSLbuild.DSLBuild
+import dsl4cc.DSLbuild.DSLBuild
 import org.junit.Test
 
 import static org.junit.Assert.assertTrue

@@ -1,20 +1,23 @@
-package DSLprocesses
+package dsl4cc.DSLprocesses
 
-import DSLrecords.EmittedObject
-import DSLrecords.RequestSend
-import DSLrecords.TerminalIndex
+import dsl4cc.DSLrecords.Acknowledgement
+import dsl4cc.DSLrecords.EmittedObject
+import dsl4cc.DSLrecords.RequestSend
+import dsl4cc.DSLrecords.TerminalIndex
 import groovy_jcsp.ChannelOutputList
 import jcsp.lang.CSProcess
 import jcsp.lang.ChannelOutput
+import jcsp.net2.Any2NetChannel
 import jcsp.net2.NetAltingChannelInput
 import jcsp.net2.NetChannelOutput
 import jcsp.net2.NetSharedChannelInput
-import DSLrecords.ExtractParameters
+import dsl4cc.DSLrecords.ExtractParameters
+import jcsp.net2.NetSharedChannelOutput
 
 class DSL4CC_Emitter implements CSProcess{
 
   // net channel connections to and from Host
-  NetChannelOutput toHost     // writes to Host: fromNodes
+  NetSharedChannelOutput toHost     // writes to Host: fromNodes
   NetSharedChannelInput fromHost  // reads from Host: hostToNodes[i] vcn = 1
 
   // net channels
@@ -29,55 +32,14 @@ class DSL4CC_Emitter implements CSProcess{
 
   @Override
   void run() {
-//    def extractParams = { List pList ->
-////      println "params to be processed = $pList"
-//      List params = []
-//      int pointer
-//      pointer = 0
-//      int pSize = pList.size()   // each param spec comprises type-specification value
-//      while( pointer < pSize ){
-//        String pType = pList[pointer]
-//        pointer++
-//        String pString = pList[pointer]
-//        pointer++
-////        println "param tokens = $pType :: $pString"
-//        switch (pType){
-//          case 'int':
-//            params << Integer.parseInt(pString)
-//            break
-//          case 'float':
-//            params << Float.parseFloat(pString)
-//            break
-//          case 'String':
-//            params << pString
-//            break
-//          case 'double':
-//            params << Double.parseDouble(pString)
-//            break
-//          case 'long':
-//            params << Long.parseLong(pString)
-//            break
-//          case 'boolean':
-//            params << Boolean.parseBoolean(pString)
-//            break
-//          default:
-//            println "Processing parameter string unexpectedly found type = $pType, value = $pString]"
-//            break
-//        } // end switch
-//      } // while
-////      println "returned params = $params"
-//      return params
-//    } // extract params
-//    String s =  " "
-//    for ( w in 0 ..< outputWork.size())
-//      s = s + "ow[$w] = ${outputWork[w].getLocation()}"
     println "Emitter worker $workerID , $parameters"
-//        "\nri = ${requestIndex.getLocation()}" +
-//        "\nui = ${useIndex.getLocation()}," +
-//        "\n$s"
 
-
-//    CSTimer timer = new CSTimer()
+    Acknowledgement ack
+    ack = new Acknowledgement(6, "Emitter-$workerID")
+    toHost.write(ack )
+    ack = fromHost.read() as Acknowledgement
+    assert ack.ackValue == 6 :"Emitter-$workerID expected ack = 6 got ${ack.ackValue}"
+    println "Emitter $workerID running "
 
     Class EmitClass = Class.forName(className)
     List parameterValues = ExtractParameters.extractParams(parameters)
@@ -102,7 +64,6 @@ class DSL4CC_Emitter implements CSProcess{
       ec = emitClass.create()
     }
     // emitter terminating
-//    println "Emit $workerID has read termination"
     TerminalIndex terminalIndex = new TerminalIndex(workerID)
     workerToNode.write(terminalIndex)
     println "Emitter $workerID has terminated"

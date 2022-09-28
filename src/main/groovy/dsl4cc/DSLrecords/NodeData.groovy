@@ -1,4 +1,4 @@
-package DSLrecords
+package dsl4cc.DSLrecords
 
 class NodeData implements Serializable{
   String clusterType, methodName, parameterString

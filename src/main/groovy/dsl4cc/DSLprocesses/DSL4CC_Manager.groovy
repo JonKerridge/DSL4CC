@@ -1,10 +1,10 @@
-package DSLprocesses
+package dsl4cc.DSLprocesses
 
-import DSLrecords.Acknowledgement
-import DSLrecords.ChannelData
-import DSLrecords.ParseRecord
-import DSLrecords.RequestSend
-import DSLrecords.TerminalIndex
+import dsl4cc.DSLrecords.Acknowledgement
+import dsl4cc.DSLrecords.ChannelData
+import dsl4cc.DSLrecords.ParseRecord
+import dsl4cc.DSLrecords.RequestSend
+import dsl4cc.DSLrecords.TerminalIndex
 import groovy_jcsp.ALT
 import groovy_jcsp.ChannelOutputList
 import jcsp.lang.CSProcess
