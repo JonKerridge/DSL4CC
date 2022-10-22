@@ -33,15 +33,17 @@ class DSL4CC_Collecter implements CSProcess{
 
   @Override
   void run() {
+    assert outFileName != null :"An output file name MUST be specified"
     String outFileString = "./${outFileName}${workerID}.dsl4ccout"
     File objFile = new File(outFileString)
     def outStream = objFile.newObjectOutputStream()
 
     List collectParameterValues, finaliseParameterValues
     collectParameterValues = []
+    finaliseParameterValues = []
     if (collectParameters != null )  collectParameterValues = ExtractParameters.extractParams(collectParameters)
     if (finaliseParameters != null )  finaliseParameterValues = ExtractParameters.extractParams(finaliseParameters)
-    println "Collecter $workerID, $collectMethodName, $collectParameterValues, $finaliseMethodName, $finaliseParameterValues"
+    println "Collecter $workerID, $outFileName, $collectMethodName, $collectParameterValues, $finaliseMethodName, $finaliseParameterValues"
 
     Acknowledgement ack
     ack = new Acknowledgement(6, "Collecter-$workerID")
@@ -64,7 +66,7 @@ class DSL4CC_Collecter implements CSProcess{
     CollectClass = Class.forName(className)
     Object collectClass = CollectClass.getDeclaredConstructor().newInstance()
     while (!(inData instanceof TerminalIndex)) {
-      inData.&"$collectMethodName"(collectParameterValues)
+      if (collectMethodName != null) inData.&"$collectMethodName"(collectParameterValues)
       outStream.writeObject(inData)
       requestWork.write(new RequestSend(workerID))
       inData = inputWork.read()

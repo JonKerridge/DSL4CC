@@ -11,6 +11,7 @@ import jcsp.lang.CSProcess
 import jcsp.lang.Channel
 import jcsp.lang.ProcessManager
 import jcsp.net2.*
+import jcsp.net2.mobile.CodeLoadingChannelFilter
 import jcsp.net2.tcpip.TCPIPNodeAddress
 
 class DSL4CC_Node implements CSProcess {
@@ -38,7 +39,7 @@ class DSL4CC_Node implements CSProcess {
     Node.getInstance().init(nodeAddress)
     String nodeIP = nodeAddress.getIpAddress()
     println "Node $nodeIP has started with host $hostIP"
-    fromHost = NetChannel.numberedNet2Any(1) //, new CodeLoadingChannelFilter.FilterRX())
+    fromHost = NetChannel.numberedNet2Any(1, new CodeLoadingChannelFilter.FilterRX())
     fromManager = NetChannel.numberedNet2One(2)
     def hostAddress = new TCPIPNodeAddress(hostIP, 1000)
     toHost = NetChannel.any2net(hostAddress, 1)

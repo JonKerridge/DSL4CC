@@ -1,0 +1,55 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="parser.jar">
+    <output-path>C:/DSLjars/artifacts/parser_jar</output-path>
+    <root id="archive" name="parser.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/main/groovy/manifests/parser/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="DSL4CC.main" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-json/3.0.13/21a3d9aeaf975d40d82c4d497e29d9feff066292/groovy-json-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-xml/3.0.13/ddfcf27160748971f2d3aafc00ede067da2f5ee9/groovy-xml-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/cspforjava/jcsp/1.1.10/bb308285a1d2ef06ba0c0d762acda85f92f84e70/jcsp-1.1.10.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.8.2/c598b4328d2f397194d11df3b1648d68d7d990e3/junit-jupiter-engine-5.8.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.8.2/32c8b8617c1342376fd5af2053da6410d8866861/junit-platform-commons-1.8.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/junit/junit/4.13.2/8ac9e16d933b6fb43bc7f576336b8f4d7eb5ba12/junit-4.13.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-testng/3.0.13/2ea51aec5e163f963908b43425547d674537a097/groovy-testng-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/info.picocli/picocli/4.6.3/18177f4c3d65cc94e6d4039775ec5aed8089f8d0/picocli-4.6.3.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-datetime/3.0.13/3972605a47902d151de3589fd22a8b273dbaafe0/groovy-datetime-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-groovydoc/3.0.13/a4b555880575a434c6434a81ea68d1f251349057/groovy-groovydoc-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-sql/3.0.13/462cadc88685ec7e9f0ba7b23c170bb7cf296c0f/groovy-sql-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.opentest4j/opentest4j/1.2.0/28c11eb91f9b6d8e200631d46e20a7f407f2a046/opentest4j-1.2.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.ant/ant-antlr/1.10.12/74b17ef7229f3d7c0d55d42486889cc553ab04d6/ant-antlr-1.10.12.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-console/3.0.13/a8ac4175c0caf3f0dcd7043c12018221bd721518/groovy-console-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.ant/ant/1.10.12/be08c4f63e92e03bac761404cf77bc270928b6c5/ant-1.10.12.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-astbuilder/3.0.13/ebe016e63eadee0ebbf7e7577afcbaceac1f4bd1/groovy-astbuilder-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-ant/3.0.13/cc678dcf27865beca22f34f7aaa6f55ed758aed9/groovy-ant-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-groovysh/3.0.13/c72e585b45e5a4d4f1e064d53d74c471946d2ecd/groovy-groovysh-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-cli-picocli/3.0.13/7766d657eefe94e4ab075455670303f103c013d7/groovy-cli-picocli-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.ant/ant-junit/1.10.12/81bde3486c2ed79cb6f699c2a5a77b0340d1f2e8/ant-junit-1.10.12.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-test-junit5/3.0.13/84293a99c67c76b0f732dc48f9005104ab7be7e1/groovy-test-junit5-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-jsr223/3.0.13/82cc4b8192f4b761d0684538a92456535f4d0237/groovy-jsr223-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.testng/testng/7.5/1416a607fae667c14e390b484e8d02b5824c0674/testng-7.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-servlet/3.0.13/a20c6d95b55b3d86fea39349ec6a1f64cf9e1671/groovy-servlet-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/jonkerridge/groovy_jcsp/1.1.10/ae411fdab3b5a673d07609b01414156e0861a2c/groovy_jcsp-1.1.10.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy/3.0.13/7652b22000c2cebbfdcfdf530a64e41baa518cb/groovy-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/5.8.2/4c21029217adf07e4c0d0c5e192b6bf610c94bdc/junit-jupiter-api-5.8.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.8.2/b737de09f19864bd136805c84df7999a142fec29/junit-platform-engine-1.8.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-templates/3.0.13/fa252df34a67831060c47fd5e00099b6cbef2e31/groovy-templates-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-docgenerator/3.0.13/88e261365671780ef7fd662b781ca815215822e4/groovy-docgenerator-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-nio/3.0.13/bfdc9d5c9ca5dc1efb0f9543dd732b7c20647fcd/groovy-nio-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.junit.platform/junit-platform-launcher/1.8.2/c334fcee82b81311ab5c426ec2d52d467c8d0b28/junit-platform-launcher-1.8.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-jmx/3.0.13/e07017f8941a4828bbd1896240fe02915e3afeb3/groovy-jmx-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-test/3.0.13/11cb6de55e4175a8f066959b8c5e89e0461192a9/groovy-test-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-macro/3.0.13/2c837e4238013e761455c1acd1b554b9ba2633ae/groovy-macro-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.thoughtworks.qdox/qdox/1.12.1/f7122f6ab1f64bdf9f5970b0e89bfb355e036897/qdox-1.12.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.32/cdcff33940d9f2de763bc41ea05a0be5941176c3/slf4j-api-1.7.32.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-swing/3.0.13/6d4d9d04631c06aa2082fb065f4636dcdafb02cc/groovy-swing-3.0.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.javaparser/javaparser-core/3.24.2/3ace42470c37f88f78edc7ca23bc45b76d381741/javaparser-core-3.24.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.beust/jcommander/1.78/a3927de9bd6f351429bcf763712c9890629d8f51/jcommander-1.78.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/jline/jline/2.14.6/c3aeac59c022bdc497c8c48ed86fa50450e4896a/jline-2.14.6.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.webjars/jquery/3.5.1/2392938e374f561c27c53872bdc9b6b351b6ba34/jquery-3.5.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.ant/ant-launcher/1.10.12/e090b4f9d3ecf45491cc16e759f1e843a1a224c0/ant-launcher-1.10.12.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

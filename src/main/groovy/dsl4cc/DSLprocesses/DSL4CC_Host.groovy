@@ -12,6 +12,7 @@ import jcsp.lang.ProcessManager
 import jcsp.net2.NetAltingChannelInput
 import jcsp.net2.NetChannel
 import jcsp.net2.Node
+import jcsp.net2.mobile.CodeLoadingChannelFilter
 import jcsp.net2.tcpip.TCPIPNodeAddress
 
 class DSL4CC_Host implements CSProcess {
@@ -20,6 +21,7 @@ class DSL4CC_Host implements CSProcess {
   int requiredManagers
   int totalNodes, totalWorkers
   List<ParseRecord> structure
+  def emitObject
 
   /**
    *
@@ -29,12 +31,18 @@ class DSL4CC_Host implements CSProcess {
    * @param structure List of ParseRecord describing the infrastructure to be created
    */
 
-  DSL4CC_Host(String hostIP, int requiredManagers, int totalNodes, int totalWorkers, List<ParseRecord> structure) {
+  DSL4CC_Host(String hostIP,
+              int requiredManagers,
+              int totalNodes,
+              int totalWorkers,
+              List<ParseRecord> structure,
+              def emitObject) {
     this.hostIP = hostIP
     this.requiredManagers = requiredManagers
     this.totalNodes = totalNodes
     this.totalWorkers = totalWorkers
     this.structure = structure
+    this.emitObject = emitObject
   }
 
   @Override
@@ -72,7 +80,8 @@ class DSL4CC_Host implements CSProcess {
     hostToNodes = []
     nodeIPstrings.each { nodeIPString ->
       def nodeAddress = new TCPIPNodeAddress(nodeIPString, 1000)
-      def toNode = NetChannel.one2net(nodeAddress, 1) //, new CodeLoadingChannelFilter.FilterTX())
+      def toNode = NetChannel.one2net(nodeAddress, 1,
+        new CodeLoadingChannelFilter.FilterTX())
       hostToNodes.append(toNode)
     }
 //    println "Host to Node Channels created"

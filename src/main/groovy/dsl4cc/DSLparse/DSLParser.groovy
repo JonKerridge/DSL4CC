@@ -2,6 +2,7 @@ package dsl4cc.DSLparse
 
 import dsl4cc.DSLrecords.ParseRecord
 import groovyjarjarpicocli.CommandLine
+import jcsp.userIO.Ask
 
 class DSLParser {
 
@@ -13,18 +14,29 @@ class DSLParser {
         outObjectFile = inputFileName + "struct"
     }
 
-    String hostIPAddress
+    DSLParser(){
+        String dslFilePath, dslName
+        dslFilePath = Ask.string("DSL4CC parser: Please specify the path to the ?.dsl4cc file : ")
+        dslName = Ask.string("DSL4CC parser: Please specify the dsl4cc file name omitting extension : ")
+        String inFilePath = dslFilePath + "/" + dslName + ".dsl4cc"
+        this.inputFileName = inFilePath
+        outputTextFile = inputFileName + "txt"
+        outObjectFile = inputFileName + "struct"
+    }
+
+    String hostIPAddress, emitClassName
 
     class HostSpecification {
         @CommandLine.Option( names = "-ip", description = "the IP address of the host")
         String hostIP
+        @CommandLine.Option(names = ["-c", "-class"], description = "name of class implementing the EmitInterface")
+        String className
     } // HostSpecification
 
     class EmitSpecification {
         @CommandLine.Option(names = ["-n", "-nodes"], description = "number of nodes") int nodes
         @CommandLine.Option(names = ["-w", "-workers"], description = "number of workers per node") int workers
-        @CommandLine.Option(names = ["-c", "-class"], description = "name of class implementing the EmitInterface")
-        String className
+        @CommandLine.Option(names = ["-c", "-class"], description = "name of class implementing the EmitInterface") String className
         @CommandLine.Parameters ( description =" IP address for each node") List <String> nodeIPs
         // can be placed anywhere in specification but the number of specified IPs must match the number of nodes
         @CommandLine.Option( names = "-p", split = "!") List paramStrings
@@ -98,6 +110,8 @@ class DSLParser {
                     parseRecord.typeName = lineType
                     parseRecord.hostAddress = host.hostIP
                     hostIPAddress = host.hostIP
+                    emitClassName = host.className
+                    parseRecord.classNameString = emitClassName
                     buildData << parseRecord
                     break
                 case 'emit':
@@ -114,6 +128,8 @@ class DSLParser {
                     parseRecord.nodes = emit.nodes
                     parseRecord.workers = emit.workers
                     parseRecord.classNameString = emit.className
+                    assert parseRecord.classNameString == emitClassName :
+                        "Host specified emit class name ($emitClassName) does not match emit specification (${parseRecord.classNameString})"
                     if (emit.nodeIPs != null)
                         emit.nodeIPs.each { parseRecord.fixedIPAddresses << it }
                     // deal with the mandatory parameter string associated with each emitter
@@ -200,5 +216,21 @@ class DSLParser {
             return false
         }
     }// parse
+
+    static void main (String[] args){
+        String dslFilePath, dslName, inFilePath
+        if (args.size() == 0) {
+            dslFilePath = Ask.string("DSL4CC parser: Please specify the path to the ?.dsl4cc file : ")
+            dslName = Ask.string("DSL4CC parser: Please specify the dsl4cc file name omitting extension : ")
+            inFilePath = dslFilePath + "/" + dslName + ".dsl4cc"
+        }
+        else {
+            dslFilePath = args[0]
+            dslName = args[1]
+            inFilePath = dslFilePath + "/" + dslName + ".dsl4cc"
+        }
+        DSLParser parser = new DSLParser(inFilePath)
+        assert parser.parse():"Parsing of $inFilePath failed"
+    }
 
 }

@@ -1,12 +1,16 @@
 plugins {
     id 'groovy'
+    id 'java-library'
+    id 'maven-publish'
+    id 'application'
 }
 
 group 'jonkerridge'
-version '1.0.2'
+version '1.0.3'
 // v1.0.1 introduces Collect Object with collect and finalise methods
 // v1.0.2 collect writes to an object output stream
-// v1.0.3 Three phase work process, with consequent changes to the parser
+// v1.0.3 introduced main entry points to parser and build
+// v1.0.4 Three phase work process, with consequent changes to the parser
 
 String propertyFileName = "C:/Github/gradle.properties"
 File propsFile = new File(propertyFileName)
@@ -45,4 +49,33 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    archiveClassifier.set( "sources")
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/JonKerridge/DSL4CC"
+            credentials {
+                username = props.getProperty("gpr.user")
+                password = props.getProperty("gpr.key")
+            }
+        }
+    }
+    publications {
+        dsl4cc(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+        }
+    }
 }

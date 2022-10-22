@@ -3,9 +3,14 @@ package dsl4cc.DSLbuild
 import dsl4cc.DSLprocesses.DSL4CC_Host
 import dsl4cc.DSLrecords.ParseRecord
 import groovy_jcsp.PAR
+import jcsp.userIO.Ask
 
 class DSLBuild {
   String structureFile
+
+  DSLBuild (String structureFilename){
+    structureFile = structureFilename
+  }
 
   boolean builder(){
     File objFile = new File(structureFile)
@@ -25,5 +30,14 @@ class DSLBuild {
     new PAR([host]).run()
     println "Build system has finished"
     return true
+  }
+
+  static void runBuild(){
+    String dslStructPath, dslStructName, dslStructFile
+    dslStructPath = Ask.string(" DSL4CC Build: Please specify the path to parsed application : " )
+    dslStructName = Ask.string(" DSL4CC Build: Please specify the name of the parsed application : ")
+    dslStructFile = dslStructPath + "/" + dslStructName + "dsl4ccstruct"
+    DSLBuild build = new DSLBuild(dslStructFile)
+    assert build.builder():"DSL4CC Build: Build process has failed"
   }
 }
