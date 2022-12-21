@@ -1,4 +1,4 @@
 host -ip 127.0.0.1
-emit -nodes 1 -workers 2 -c BuildTests.EmitTest2 -p int,0,int,99!int,100,int,199
-work -n 2 -w 4 -m updateMethod -p int,500 127.0.0.2 127.0.0.5
-collect -n 1 -w 1 -cm collect -cp int,500 -fm finalise -fp int,0,int,199
+emit -nodes 1 -workers 1 -p int,0,int,100
+work -n 2 -w 4 -m updateMethod -p int,500
+collect -n 2 -w 1 -f Test2Results

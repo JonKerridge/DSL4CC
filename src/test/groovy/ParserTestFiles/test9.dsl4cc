@@ -1,0 +1,4 @@
+host -ip 127.0.0.1
+emit -nodes 1 -workers 2 -p int,0,int,100!int,100,int,200
+work -n 1 -w 1 -m updateMethod -p int,500
+collect -n 1 -w 1 -f Test9Results

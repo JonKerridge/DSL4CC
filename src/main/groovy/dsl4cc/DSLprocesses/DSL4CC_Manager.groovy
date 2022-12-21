@@ -123,9 +123,9 @@ class DSL4CC_Manager implements CSProcess{
     toHost.write(ack)  // ending phase 4
 //    println "Manger $managerID ready to operate its internal queue having finished phase 4"
     List <RequestSend> requests = []  // holds indexes of workers making input requests
-    List terminalRequests = [] // to hold index of workers that have terminated
+//    List <TerminalIndex> terminalRequests = [] // to hold TerminalIndex record of workers that have terminated
     int terminalCount = 0
-    int totalOutWorkers = outNodes * outWorkers
+//    int totalOutWorkers = outNodes * outWorkers
     boolean running = true
     def managerAlt = new ALT([requestWork, requestIndex])
     boolean [] preCon = new boolean[2]
@@ -141,8 +141,8 @@ class DSL4CC_Manager implements CSProcess{
           if (inputObject instanceof TerminalIndex) {
 //            println "Manager $managerID is processing termination for $outNodes workers, " +
 //                "currently $terminalCount have terminated"
-            TerminalIndex terminalIndex = inputObject as TerminalIndex
-            terminalRequests << terminalIndex.tIndex
+//            TerminalIndex terminalIndex = inputObject as TerminalIndex
+//            terminalRequests << terminalIndex
             terminalCount++
             if (terminalCount == outNodes) running = false
           }
@@ -154,9 +154,7 @@ class DSL4CC_Manager implements CSProcess{
       preCon[1] = (requests.size() > 0)
 //      println "Manager $managerID has requests from $requests"
     } // running loop
-    // check termination is consistent
-    for ( w in 0 ..< outNodes)
-      assert terminalRequests.contains(w): "Manager $managerID terminal requests inconsistent, missing node $w"
+
     // start termination procedure
     // read request for work from those workers that have not yet
     // sent a request during the termination phase
@@ -167,12 +165,11 @@ class DSL4CC_Manager implements CSProcess{
     // now terminate each of the inputting workers
 //    println "Manager $managerID has all inputting workers requests"
     for (w in 0 ..< totalInWorkers)
-      outputTermination[w].write(new TerminalIndex( w))
-
+      outputTermination[w].write(new TerminalIndex("Manager $managerID inWorker: ", w, 0))
 
     // now tell host manager has terminated
 //    println "Manager $managerID now informing Host of termination"
     toHost.write(new Acknowledgement(5, "Manager $managerID"))
-//    println "Manager $managerID terminated"
-  }
+    println "Manager $managerID terminated"
+  }// run()
 }

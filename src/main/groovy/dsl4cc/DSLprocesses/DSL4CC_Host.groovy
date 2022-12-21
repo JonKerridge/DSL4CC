@@ -1,8 +1,10 @@
 package dsl4cc.DSLprocesses
 
 import dsl4cc.DSLrecords.Acknowledgement
+import dsl4cc.DSLrecords.ClassDefinitions
 import dsl4cc.DSLrecords.ParseRecord
 import dsl4cc.DSLrecords.TerminalIndex
+import dsl4cc.DSLrecords.TimingData
 import groovy_jcsp.ChannelInputList
 import groovy_jcsp.ChannelOutputList
 import jcsp.lang.CSProcess
@@ -22,6 +24,7 @@ class DSL4CC_Host implements CSProcess {
   int totalNodes, totalWorkers
   List<ParseRecord> structure
   def emitObject
+  Class emitClass, collectClass
 
   /**
    *
@@ -30,27 +33,51 @@ class DSL4CC_Host implements CSProcess {
    * @param totalNodes the total number of nodes required to implement the processing structure
    * @param structure List of ParseRecord describing the infrastructure to be created
    */
+// v1.0.4
+//  DSL4CC_Host(String hostIP,
+//              int requiredManagers,
+//              int totalNodes,
+//              int totalWorkers,
+//              List<ParseRecord> structure,
+//              def emitObject) {
+//    this.hostIP = hostIP
+//    this.requiredManagers = requiredManagers
+//    this.totalNodes = totalNodes
+//    this.totalWorkers = totalWorkers
+//    this.structure = structure
+//    this.emitObject = emitObject
+//  }
 
   DSL4CC_Host(String hostIP,
-              int requiredManagers,
-              int totalNodes,
-              int totalWorkers,
-              List<ParseRecord> structure,
-              def emitObject) {
+                 int requiredManagers,
+                 int totalNodes,
+                 int totalWorkers,
+                 List<ParseRecord> structure,
+                 Class emitClass,
+                 Class collectClass) {
     this.hostIP = hostIP
     this.requiredManagers = requiredManagers
     this.totalNodes = totalNodes
     this.totalWorkers = totalWorkers
     this.structure = structure
-    this.emitObject = emitObject
+    this.emitClass = emitClass
+    this.collectClass = collectClass
   }
 
   @Override
   void run() {
+
+    // v1.0.4 check emit class is accessible
+//    def emitObject = emitClass.getDeclaredConstructor().newInstance()
+//    println "Host: Emitted Object values are ${emitObject}"
+
     // created in Phase 1
     ChannelOutputList hostToNodes     // writes to node[i] fromHost Node vcn = 1
     NetAltingChannelInput fromNodes   // reads from all nodes toHost Host vcn = 1
 
+    // start timing
+    long startTime, processingStart, elapsed, processingElapsed
+    startTime = System.currentTimeMillis()
 //    println "Host starting -> needing $totalNodes nodes and $requiredManagers manager processes"
     // SETUP PHASE 1 create host node and its input channel then start the node processes
     // read in IP addresses of nodes using the fromNodes channel,
@@ -68,13 +95,13 @@ class DSL4CC_Host implements CSProcess {
 //    println "Active structure is $structure"
     fromNodes = NetChannel.numberedNet2One(1)
 
-    println "Please start $totalNodes nodes with $nodeIP as host node; creating $totalWorkers internal processes"
+    println "Host: Please start $totalNodes nodes with $nodeIP as host node; creating $totalWorkers internal processes"
 
     List<String> nodeIPstrings = []
     // assumes nodes have created the corresponding net input channels
     for (n in 1..totalNodes) nodeIPstrings << fromNodes.read() as String
     println "Node IPs are $nodeIPstrings"
-
+    processingStart = System.currentTimeMillis()
     // create the hostToNodes channels
 
     hostToNodes = []
@@ -85,6 +112,11 @@ class DSL4CC_Host implements CSProcess {
       hostToNodes.append(toNode)
     }
 //    println "Host to Node Channels created"
+    //send class used to emit objects to each node
+    ClassDefinitions classDefinitions = new ClassDefinitions(emitClass: emitClass,
+        collectClass: collectClass)
+    for (n in 0..<totalNodes) hostToNodes[n].write(classDefinitions)
+    println "Host has sent class definitions to each node"
 
     // find from structure those nodes that are allocated to fixed IPs
     List preAllocatedIPs = []
@@ -157,8 +189,9 @@ class DSL4CC_Host implements CSProcess {
 
     // continue with initialisation  tell nodes phase 2 can start
     acks = []
-    for (n in 0..<totalNodes) hostToNodes[n].write(new Acknowledgement(2, hostIP))
-//    println "Host has initiated phase 2"
+    Acknowledgement ack2 = new Acknowledgement(2, hostIP)
+    for (n in 0..<totalNodes) hostToNodes[n].write(ack2)
+    println "Host has initiated phase 2"
     // and wait for phase 2 to end
     acks = []
     for (n in 1..totalNodes) acks << (fromNodes.read() as Acknowledgement)
@@ -233,6 +266,13 @@ class DSL4CC_Host implements CSProcess {
       def fh = manager2host[rm].in().read() as Acknowledgement
       assert fh.ackValue == 5: "Host expecting 5 got ${fh.ackValue} from ${fh.ackString}"
     }
-    println "Host Terminated"
+    //now read the terminating timing data from nodes
+    List < TimingData> timeData = []
+    for (n in 1..totalNodes) timeData << (fromNodes.read() as TimingData)
+    // all nodes have now terminated
+    elapsed = System.currentTimeMillis() - startTime
+    processingElapsed = System.currentTimeMillis() - processingStart
+    println "Host Terminated: \n Overall run time is $elapsed milliseconds\n Processing time is $processingElapsed milliseconds"
+    timeData.each {println "$it"}
   }
 }

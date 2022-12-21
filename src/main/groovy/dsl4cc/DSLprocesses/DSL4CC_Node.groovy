@@ -2,8 +2,11 @@ package dsl4cc.DSLprocesses
 
 import dsl4cc.DSLrecords.Acknowledgement
 import dsl4cc.DSLrecords.ChannelData
+import dsl4cc.DSLrecords.ClassDefinitions
+import dsl4cc.DSLrecords.ExtractVersion
 import dsl4cc.DSLrecords.ParseRecord
 import dsl4cc.DSLrecords.TerminalIndex
+import dsl4cc.DSLrecords.TimingData
 import groovy_jcsp.ChannelInputList
 import groovy_jcsp.ChannelOutputList
 import jcsp.lang.Any2OneChannel
@@ -18,9 +21,15 @@ class DSL4CC_Node implements CSProcess {
 
   String hostIP
   String testingNodeIP  // only used for testing on 127.0.0.0 network
+  String version = "1.1.1"
 
   @Override
   void run() {
+    long startTime, nodeElapsedTime
+    if (!ExtractVersion.extractVersion(version)){
+      println "DSL4CC:Version $version needs to downloaded, please modify the gradle.build file"
+      System.exit(-1)
+    }
     List<ParseRecord> structure
     //created in phase 1
     NetSharedChannelOutput toHost     // writes to Host: fromNodes
@@ -38,13 +47,22 @@ class DSL4CC_Node implements CSProcess {
 //    def nodeAddress = new TCPIPNodeAddress(1000)
     Node.getInstance().init(nodeAddress)
     String nodeIP = nodeAddress.getIpAddress()
-    println "Node $nodeIP has started with host $hostIP"
+    println "Node $nodeIP has started with host $hostIP using version $version"
     fromHost = NetChannel.numberedNet2Any(1, new CodeLoadingChannelFilter.FilterRX())
     fromManager = NetChannel.numberedNet2One(2)
     def hostAddress = new TCPIPNodeAddress(hostIP, 1000)
     toHost = NetChannel.any2net(hostAddress, 1)
     toHost.write(nodeIP)
 //    println "Node $nodeIP has sent its IP address to host at $hostIP"
+    // read in the class definition used to emit objects
+    ClassDefinitions classDefinitions = fromHost.read() as ClassDefinitions
+//    def emitObject = emitClassDef.emitClass.getDeclaredConstructor().newInstance()
+//    println "Node $nodeIP has created an empty emit object $emitObject"
+
+    // start timing as we know all the nodes have been started
+    // up to this point the time to start nodes will influence timings
+    startTime = System.currentTimeMillis()
+
     // node can now read in the structure object unless some preAllocated nodes have not been started
     Object dataFromHost = fromHost.read()
     if (dataFromHost instanceof TerminalIndex) System.exit(-2)  // instant termination
@@ -55,8 +73,8 @@ class DSL4CC_Node implements CSProcess {
 //    println "sending $ack"
     toHost.write(ack)
     // wait for host to send continue signal
-//    println "Node $nodeIP waiting to continue"
-    ack = fromHost.read() as Acknowledgement
+    println "Node $nodeIP waiting to continue"
+    ack = (fromHost.read() as Acknowledgement)
     assert ack.ackValue == 2: "Node $nodeIP expecting to start setup phase 2, got $ack instead"
 
     // SETUP PHASE 2 create all the channels used by nodes and workers in the cluster
@@ -93,7 +111,7 @@ class DSL4CC_Node implements CSProcess {
     outputManagerLocation = structure[structureIndex].outputManagerLocation as NetChannelLocation
 
 //    println "Node $nodeIP has t = $nodeType, ni = $nodeIndex, w = $workers, om = $outputManagerLocation, im = $inputManagerLocation"
-
+    println "Node $nodeIP has type: $nodeType index: $nodeIndex worker: $workers"
 
     ChannelData inputLocations = new ChannelData()  // used to send channel locations to nodes
     ChannelData sendToLocations = new ChannelData() // that will then output to these channels
@@ -130,6 +148,8 @@ class DSL4CC_Node implements CSProcess {
 
     // create the output net channels to the Manager processes and send channel data
     NetChannelOutput requestWork, requestIndex
+    requestIndex = null
+    requestWork = null
     if (outputManagerLocation != null) {
       requestIndex = NetChannel.any2net(outputManagerLocation)
       requestIndex.write(sendToLocations)
@@ -142,7 +162,7 @@ class DSL4CC_Node implements CSProcess {
     }
     List<ChannelData> workInList
     ChannelOutputList outputWork = new ChannelOutputList()
-    int totalWorkers
+//    int totalWorkers
     if (outputManagerLocation != null) {
       workInList = (fromManager.read() as List<ChannelData>)
 //      println "Node $nodeIP has read its workInList"
@@ -185,11 +205,11 @@ class DSL4CC_Node implements CSProcess {
               toHost: toHost,
               fromHost: fromHost,
               requestIndex: requestIndex,
-              useIndex: sendTo[w],
+              useIndex: sendTo[w] as NetAltingChannelInput,
               outputWork: outputWork,
               workerToNode: fromWorkers.out(),
               workerID: workerID,
-              className: activityName,
+              classDef: classDefinitions.emitClass,
               parameters: structure[structureIndex].emitParameterString[workerID]))
         }
         break
@@ -200,10 +220,10 @@ class DSL4CC_Node implements CSProcess {
               toHost: toHost,
               fromHost: fromHost,
               requestIndex: requestIndex,
-              useIndex: sendTo[w],
+              useIndex: sendTo[w] as NetAltingChannelInput,
               outputWork: outputWork,
               requestWork: requestWork,
-              inputWork: inputWork[w],
+              inputWork: inputWork[w] as NetAltingChannelInput,
               workerToNode: fromWorkers.out(),
               workerID: workerID,
               methodName: activityName,
@@ -214,17 +234,16 @@ class DSL4CC_Node implements CSProcess {
         emitWorkNode = false
         for (w in 0..<workers) {
           int workerID = (nodeIndex * workers) + w
-          nodeProcessManagers[w] = new ProcessManager(new DSL4CC_Collecter(
+          nodeProcessManagers[w] = new ProcessManager(new DSL4CC_Collector(
               toHost: toHost,
               fromHost: fromHost,
               requestWork: requestWork,
-              inputWork: inputWork[w],
+              inputWork: inputWork[w] as NetAltingChannelInput,
               workerToNode: fromWorkers.out(),
               workerID: workerID,
+              collectClass: classDefinitions.collectClass,
               outFileName: structure[structureIndex].outFileName,
-              collectMethodName: activityName, //collect method and collectParameters
               collectParameters: structure[structureIndex].collectParameterString[workerID],
-              finaliseMethodName: structure[structureIndex].finaliseNameString, // finalise method and params
               finaliseParameters: structure[structureIndex].finaliseParameterString[workerID]))
         }
         break
@@ -232,19 +251,32 @@ class DSL4CC_Node implements CSProcess {
     for (w in 0..<nodeProcessManagers.size()) nodeProcessManagers[w].start()
 
 //    println "Node $nodeIP has started its worker processes - awaiting termination"
+    Map <Integer, Long> processingTimes = [:]
     for (w in 0..<workers) {
       TerminalIndex terminatedWorker = fromWorkers.in().read() as TerminalIndex
-//      int tIndex = terminatedWorker.tIndex
-//      assert tIndex <= nodeIndex + w: "Unexpected index ($tIndex) for terminated worker: expecting value less than $workers"
+      processingTimes.put(terminatedWorker.tIndex, terminatedWorker.elapsed)
     }
-    // all the node's workers have terminated, so inform its manager
-//    println "Node $nodeIP - all workers have terminated"
+    // all the node's workers have terminated, so inform its manager (except for the Collect cluster)
+//    println "Node $nodeIP - all workers have terminated collected times $processingTimes"
+    nodeElapsedTime = System.currentTimeMillis() - startTime
+    TerminalIndex tIndex
     if (emitWorkNode) {
-      TerminalIndex tIndex = new TerminalIndex(nodeIndex)
-//      println "Node $nodeIP Terminating with $tIndex"
-      //cannot do this in a collect node because the requestIndex channel does not exist
+      tIndex = new TerminalIndex(nodeIP, nodeIndex, nodeElapsedTime)
       requestIndex.write(tIndex)
     }
-    println "Node $nodeIP Terminated"
+    println "Node $nodeIP - index $nodeIndex terminated after $nodeElapsedTime milliseconds" +
+        "\n  Internal process times are $processingTimes"
+
+    // now send timing data to host
+    TimingData timingData = new TimingData(
+        nodeIP: nodeIP,
+        nodeIndex: nodeIndex,
+        nodeType: nodeType,
+        methodName: nodeType == 'work' ? activityName : 'default',
+        nodeElapsed: nodeElapsedTime,
+        processingTimes: processingTimes
+    )
+    toHost.write(timingData)
+    println "Node $nodeIP - index $nodeIndex terminated"
   }
 }

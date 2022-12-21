@@ -3,6 +3,7 @@ package dsl4cc.DSLrecords
 class ExtractParameters {
   static def extractParams = { List pList ->
 //      println "params to be processed = $pList"
+    if (pList == null) return null
     List params = []
     int pointer
     pointer = 0

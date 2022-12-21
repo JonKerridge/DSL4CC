@@ -1,13 +1,12 @@
 package dsl4cc.DSLprocesses
 
 import dsl4cc.DSLrecords.Acknowledgement
-import dsl4cc.DSLrecords.EmittedObject
+import dsl4cc.DSLrecords.EmitInterface
 import dsl4cc.DSLrecords.RequestSend
 import dsl4cc.DSLrecords.TerminalIndex
 import groovy_jcsp.ChannelOutputList
 import jcsp.lang.CSProcess
 import jcsp.lang.ChannelOutput
-import jcsp.net2.Any2NetChannel
 import jcsp.net2.NetAltingChannelInput
 import jcsp.net2.NetChannelOutput
 import jcsp.net2.NetSharedChannelInput
@@ -27,30 +26,33 @@ class DSL4CC_Emitter implements CSProcess{
   // internal channels to Node
   ChannelOutput workerToNode
   int workerID    // relative to the cluster
-  String className
+//  String className
+  Class<?> classDef
   List <String> parameters // specific to an emitter if there is more than 1
 
   @Override
   void run() {
-    println "Emitter worker $workerID , $parameters"
-
+    long startTime, elapsed
     Acknowledgement ack
     ack = new Acknowledgement(6, "Emitter-$workerID")
     toHost.write(ack )
+    startTime = System.currentTimeMillis()
     ack = fromHost.read() as Acknowledgement
     assert ack.ackValue == 6 :"Emitter-$workerID expected ack = 6 got ${ack.ackValue}"
-    println "Emitter $workerID running "
+//    println "Emitter $workerID running "
 
-    Class EmitClass = Class.forName(className)
+//    Class EmitClass = Class.forName(className)
     List parameterValues = ExtractParameters.extractParams(parameters)
-//    println "Emit $workerID has params = $parameterValues"
-    Object emitClass = EmitClass.getDeclaredConstructor().newInstance(parameterValues)
+    println "Emit $workerID has params = $parameterValues"
+    Class[] cArg = new Class[1]
+    cArg[0] = List.class
+    Object emitClass = classDef.getDeclaredConstructor(cArg).newInstance(parameterValues)
 //    println "Emit $workerID class created"
 
-    def ec = emitClass.create() as EmittedObject
+    def ec = (emitClass as EmitInterface).create()
     RequestSend rsIndex = new RequestSend(workerID)
 //    println "Emitting $ec"
-    while (ec.valid) {
+    while (ec != null) {
 //      println "Emit sending index request $rsIndex"
       requestIndex.write(rsIndex)
 //      println "Emitter has requested an index for $workerID"
@@ -58,14 +60,15 @@ class DSL4CC_Emitter implements CSProcess{
 //      println "Emit has read index to use $indexToUse"
       int use = indexToUse.index
 //      println "emit will use index $use"
-      outputWork[use].write(ec.emittedObject)
-//      println "sending ${ec.emittedObject} to input worker $use"
+      outputWork[use].write(ec)
+//      println "Emit $workerID (64) written ${ec} to input worker $use via $rsIndex"
 //      timer.sleep(10)
       ec = emitClass.create()
     }
     // emitter terminating
-    TerminalIndex terminalIndex = new TerminalIndex(workerID)
+    elapsed = System.currentTimeMillis() - startTime
+    TerminalIndex terminalIndex = new TerminalIndex("Emitter",workerID, elapsed)
     workerToNode.write(terminalIndex)
-    println "Emitter $workerID has terminated"
+//    println "Emitter $workerID has terminated after $elapsed millisecs"
   }
 }

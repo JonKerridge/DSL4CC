@@ -6,11 +6,13 @@ plugins {
 }
 
 group 'jonkerridge'
-version '1.0.3'
+version '1.1.1'
 // v1.0.1 introduces Collect Object with collect and finalise methods
 // v1.0.2 collect writes to an object output stream
-// v1.0.3 introduced main entry points to parser and build
-// v1.0.4 Three phase work process, with consequent changes to the parser
+// v1.0.3 introduced main entry points to parser and build and initial sync between host and workers
+// v1.0.4 passed the emit object class definition as a parameter to the constructor
+// v1.1.0 first version that passes tests correctly
+// v1.1.1 returns times to host process from each of the nodes
 
 String propertyFileName = "C:/Github/gradle.properties"
 File propsFile = new File(propertyFileName)

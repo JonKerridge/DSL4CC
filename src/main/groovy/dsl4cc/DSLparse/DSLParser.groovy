@@ -1,5 +1,6 @@
 package dsl4cc.DSLparse
 
+import dsl4cc.DSLrecords.ExtractVersion
 import dsl4cc.DSLrecords.ParseRecord
 import groovyjarjarpicocli.CommandLine
 import jcsp.userIO.Ask
@@ -7,36 +8,25 @@ import jcsp.userIO.Ask
 class DSLParser {
 
     String inputFileName, outputTextFile, outObjectFile
+    String version = "1.1.1a"
 
     DSLParser(String inFileName) {
-        this.inputFileName = inFileName
+        this.inputFileName = inFileName + ".dsl4cc"
         outputTextFile = inputFileName + "txt"
         outObjectFile = inputFileName + "struct"
     }
 
-    DSLParser(){
-        String dslFilePath, dslName
-        dslFilePath = Ask.string("DSL4CC parser: Please specify the path to the ?.dsl4cc file : ")
-        dslName = Ask.string("DSL4CC parser: Please specify the dsl4cc file name omitting extension : ")
-        String inFilePath = dslFilePath + "/" + dslName + ".dsl4cc"
-        this.inputFileName = inFilePath
-        outputTextFile = inputFileName + "txt"
-        outObjectFile = inputFileName + "struct"
-    }
-
-    String hostIPAddress, emitClassName
+    String hostIPAddress // v1.0.4, emitClassName
 
     class HostSpecification {
-        @CommandLine.Option( names = "-ip", description = "the IP address of the host")
-        String hostIP
-        @CommandLine.Option(names = ["-c", "-class"], description = "name of class implementing the EmitInterface")
-        String className
+        @CommandLine.Option( names = "-ip", description = "the IP address of the host") String hostIP
+// v1.0.4       @CommandLine.Option(names = ["-c", "-class"], description = "name of class implementing the EmitInterface") String className
     } // HostSpecification
 
     class EmitSpecification {
         @CommandLine.Option(names = ["-n", "-nodes"], description = "number of nodes") int nodes
         @CommandLine.Option(names = ["-w", "-workers"], description = "number of workers per node") int workers
-        @CommandLine.Option(names = ["-c", "-class"], description = "name of class implementing the EmitInterface") String className
+// v1.0.4       @CommandLine.Option(names = ["-c", "-class"], description = "name of class implementing the EmitInterface") String className
         @CommandLine.Parameters ( description =" IP address for each node") List <String> nodeIPs
         // can be placed anywhere in specification but the number of specified IPs must match the number of nodes
         @CommandLine.Option( names = "-p", split = "!") List paramStrings
@@ -45,41 +35,33 @@ class DSLParser {
     } // EmitSpecification
 
     class WorkSpecification {
-        @CommandLine.Option(names = ["-n", "-nodes"], description = "number of nodes")
-        int nodes
-        @CommandLine.Option(names = ["-w", "-workers"], description = "number of workers per node")
-        int workers
-        @CommandLine.Option(names = ["-m", "-method"], description = "name of method used in this cluster")
-        String methodName
+        @CommandLine.Option(names = ["-n", "-nodes"], description = "number of nodes") int nodes
+        @CommandLine.Option(names = ["-w", "-workers"], description = "number of workers per node") int workers
+        @CommandLine.Option(names = ["-m", "-method"], description = "name of method used in this cluster") String methodName
         @CommandLine.Parameters ( description =" IP address for each node") List <String> nodeIPs
         // can be placed anywhere in specification but the number of specified IPs must match the number of nodes
         @CommandLine.Option( names = "-p") String paramString
         // comma separated type, value pairs with no spaces or other punctuation
         // three phase worker additions
-        @CommandLine.Option(names = "-3p", description = "flag to indicate three phase worker")
-        boolean threePhase
+        @CommandLine.Option(names = "-3p", description = "flag to indicate three phase worker") boolean threePhase
     } // WorkSpecification
 
     class CollectSpecification {
-        @CommandLine.Option(names = ["-n", "-nodes"], description = "number of nodes")
-        int nodes
-        @CommandLine.Option(names = ["-w", "-workers"], description = "number of workers per node")
-        int workers
-        @CommandLine.Option(names = ["-cm", "-cmethod"], description = "name of collect method used in this cluster")
-        String collectMethod
+        @CommandLine.Option(names = ["-n", "-nodes"], description = "number of nodes") int nodes
+        @CommandLine.Option(names = ["-w", "-workers"], description = "number of workers per node") int workers
+//        @CommandLine.Option(names = ["-cm", "-cmethod"], description = "name of collect method used in this cluster") String collectMethod
         @CommandLine.Option( names = ["-f", "-file"]) String outFileName  // base name of object file to which collected records are written
         // comma separated type, value pairs with no spaces or other punctuation
         @CommandLine.Option( names = "-cp", split = "!") List collectParamStrings  // parameters of the collect method, one per collecter process
         // comma separated type, value pairs with no spaces or other punctuation
-        @CommandLine.Option(names = ["-fm", "-fmethod"], description = "name of finalise method used in this cluster")
-        String finaliseMethod
+//        @CommandLine.Option(names = ["-fm", "-fmethod"], description = "name of finalise method used in this cluster") String finaliseMethod
         @CommandLine.Option( names = "-fp", split = "!") List finaliseParamStrings  // parameters of the finalise method, one per collecter process
         // comma separated type, value pairs with no spaces or other punctuation
         @CommandLine.Parameters ( description =" IP address for each node") List <String> nodeIPs
         // can be placed anywhere in specification but the number of specified IPs must match the number of nodes
     } // CollectSpecification
 
-    boolean checkIPUniqueness (List<ParseRecord> buildData){
+    static boolean checkIPUniqueness (List<ParseRecord> buildData){
         List <String> usedIPs = []
         buildData.each {record ->
             if ( record.fixedIPAddresses != null)
@@ -95,6 +77,10 @@ class DSLParser {
     } // checkIPUniqueness
 
     boolean parse(){
+        if (!ExtractVersion.extractVersion(version)){
+            println "DSL4CC:Version $version needs to downloaded, please modify the gradle.build file"
+            System.exit(-1)
+        }
         List<ParseRecord> buildData
         buildData = []
         new File(inputFileName).eachLine{ String inLine ->
@@ -110,15 +96,16 @@ class DSLParser {
                     parseRecord.typeName = lineType
                     parseRecord.hostAddress = host.hostIP
                     hostIPAddress = host.hostIP
-                    emitClassName = host.className
-                    parseRecord.classNameString = emitClassName
+// v1.0.4                   emitClassName = host.className
+// v1.0.4                   parseRecord.classNameString = emitClassName
                     buildData << parseRecord
                     break
                 case 'emit':
                     EmitSpecification emit = new EmitSpecification()
                     new CommandLine(emit).parseArgs(args)
                     int totalParamString = emit.nodes * emit.workers
-                    println "Emit: Nodes = ${emit.nodes}, Workers = ${emit.workers}, Class = ${emit.className}, IPs = ${emit.nodeIPs}, Params = ${emit.paramStrings}"
+// v1.0.4                   println "Emit: Nodes = ${emit.nodes}, Workers = ${emit.workers}, Class = ${emit.className}, IPs = ${emit.nodeIPs}, Params = ${emit.paramStrings}"
+                    println "Emit: Nodes = ${emit.nodes}, Workers = ${emit.workers}, IPs = ${emit.nodeIPs}, Params = ${emit.paramStrings}"
                     // assumes emitters always have a parameter string associated with them
                     assert (emit.paramStrings.size() == totalParamString): "Emit must have $totalParamString parameter strings ${emit.paramStrings} supplied "
                     if (emit.nodeIPs != null)
@@ -127,9 +114,9 @@ class DSLParser {
                     parseRecord.hostAddress = hostIPAddress
                     parseRecord.nodes = emit.nodes
                     parseRecord.workers = emit.workers
-                    parseRecord.classNameString = emit.className
-                    assert parseRecord.classNameString == emitClassName :
-                        "Host specified emit class name ($emitClassName) does not match emit specification (${parseRecord.classNameString})"
+// v1.0.4                   parseRecord.classNameString = emit.className
+// v1.0.4                   assert parseRecord.classNameString == emitClassName :
+// v1.0.4                       "Host specified emit class name ($emitClassName) does not match emit specification (${parseRecord.classNameString})"
                     if (emit.nodeIPs != null)
                         emit.nodeIPs.each { parseRecord.fixedIPAddresses << it }
                     // deal with the mandatory parameter string associated with each emitter
@@ -155,14 +142,16 @@ class DSLParser {
                     parseRecord.methodNameString = work.methodName
                     if (work.paramString != null)
                         parseRecord.parameterString = work.paramString.tokenize(',')
+                    else
+                        parseRecord.parameterString = null
                     buildData << parseRecord
                     break
                 case 'collect':
                     CollectSpecification collect = new CollectSpecification()
                     new CommandLine(collect).parseArgs(args)
                     println "Collect: Nodes = ${collect.nodes}, Workers = ${collect.workers}, OutFile = ${collect.outFileName}, " +
-                            "CMethod = ${collect.collectMethod}, CParams = ${collect.collectParamStrings}, " +
-                            "FMethod = ${collect.finaliseMethod}, FParams = ${collect.finaliseParamStrings}, IPs = ${collect.nodeIPs}"
+                            "Collect Params = ${collect.collectParamStrings}, " +
+                            "Finalise Params = ${collect.finaliseParamStrings}, IPs = ${collect.nodeIPs}"
                     if (collect.nodeIPs != null)
                         assert collect.nodes == collect.nodeIPs.size(): "Collect: Number of specified IPs must be same as number of nodes"
                     int totalParamString = collect.nodes * collect.workers
@@ -174,8 +163,8 @@ class DSLParser {
                     parseRecord.hostAddress = hostIPAddress
                     parseRecord.nodes = collect.nodes
                     parseRecord.workers = collect.workers
-                    parseRecord.methodNameString = collect.collectMethod
-                    parseRecord.outFileName = collect.outFileName
+//                    parseRecord.methodNameString = collect.collectMethod
+                    parseRecord.outFileName = collect.outFileName // could be null
                     if (collect.nodeIPs != null)
                         collect.nodeIPs.each { parseRecord.fixedIPAddresses << it }
                     if (collect.collectParamStrings != null)
@@ -184,7 +173,7 @@ class DSLParser {
                             tokenizedParams = paramSpec.tokenize(',')
                             parseRecord.collectParameterString << tokenizedParams
                         }
-                    parseRecord.finaliseNameString = collect.finaliseMethod
+//                    parseRecord.finaliseNameString = collect.finaliseMethod
                     if (collect.finaliseParamStrings != null)
                         collect.finaliseParamStrings.each { String paramSpec ->
                             List<String> tokenizedParams
@@ -217,20 +206,21 @@ class DSLParser {
         }
     }// parse
 
-    static void main (String[] args){
-        String dslFilePath, dslName, inFilePath
-        if (args.size() == 0) {
-            dslFilePath = Ask.string("DSL4CC parser: Please specify the path to the ?.dsl4cc file : ")
-            dslName = Ask.string("DSL4CC parser: Please specify the dsl4cc file name omitting extension : ")
-            inFilePath = dslFilePath + "/" + dslName + ".dsl4cc"
-        }
-        else {
-            dslFilePath = args[0]
-            dslName = args[1]
-            inFilePath = dslFilePath + "/" + dslName + ".dsl4cc"
-        }
-        DSLParser parser = new DSLParser(inFilePath)
-        assert parser.parse():"Parsing of $inFilePath failed"
-    }
+// v1.0.4
+//    static void main (String[] args){
+//        String dslFilePath, dslName, inFilePath
+//        if (args.size() == 0) {
+//            dslFilePath = Ask.string("DSL4CC parser: Please specify the path to the ?.dsl4cc file : ")
+//            dslName = Ask.string("DSL4CC parser: Please specify the dsl4cc file name omitting extension : ")
+//            inFilePath = dslFilePath + "/" + dslName + ".dsl4cc"
+//        }
+//        else {
+//            dslFilePath = args[0]
+//            dslName = args[1]
+//            inFilePath = dslFilePath + "/" + dslName + ".dsl4cc"
+//        }
+//        DSLParser parser = new DSLParser(inFilePath)
+//        assert parser.parse():"Parsing of $inFilePath failed"
+//    }
 
 }
